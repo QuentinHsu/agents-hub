@@ -1,0 +1,15 @@
+{
+  "originHash" : "bf14a7096100138405c0a8e8f2934a7b49b018d5856adda67c23831f8a6f1010",
+  "pins" : [
+    {
+      "identity" : "svgpath",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/QuentinHsu/SVGPath.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "2343ff1f3e897cdbc31566635073347133d56b0a"
+      }
+    }
+  ],
+  "version" : 3
+}

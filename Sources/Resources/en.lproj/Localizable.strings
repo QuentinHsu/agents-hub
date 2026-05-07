@@ -1,0 +1,94 @@
+/* App */
+"ui.settings.about" = "About";
+"ui.settings.title" = "Settings";
+"ui.settings.general" = "General";
+"ui.settings.language" = "Language";
+"ui.settings.storage" = "Storage";
+"ui.settings.config_path" = "Config Path";
+
+/* Common actions */
+"ui.action.add_configuration" = "Add Configuration";
+"ui.action.duplicate" = "Duplicate";
+"ui.action.delete" = "Delete";
+"ui.action.set_current" = "Set Current";
+"ui.action.refresh" = "Refresh";
+"ui.action.reveal_in_finder" = "Reveal in Finder";
+
+/* Common labels */
+"ui.label.active" = "Active";
+"ui.label.agents" = "Agents";
+"ui.label.current" = "Current";
+"ui.label.no_base_url" = "No base URL";
+"ui.label.no_current_configuration" = "No current configuration";
+"ui.label.no_key" = "No key";
+"ui.label.no_local_installation" = "No local installation detected";
+"ui.label.not_found" = "Not found";
+"ui.label.not_installed" = "Not installed";
+
+/* Sidebar */
+"ui.sidebar.overview" = "Overview";
+"ui.sidebar.settings" = "Settings";
+
+/* Toolbar help */
+"ui.hint.add_configuration_selected_agent" = "Add a configuration for the selected agent";
+"ui.hint.duplicate_configuration" = "Duplicate the selected configuration";
+"ui.hint.delete_configuration" = "Delete the selected configuration";
+"ui.hint.set_current_configuration" = "Set the selected configuration as current";
+
+/* Dashboard */
+"ui.dashboard.agent_status" = "Agent Status";
+"ui.dashboard.local_versions" = "Local Versions";
+"ui.hint.refresh_dashboard" = "Refresh API checks and local versions";
+
+/* Agent profiles */
+"ui.agent_profiles.configurations" = "Configurations";
+"ui.agent_profiles.saved_count" = "%lld saved";
+"ui.hint.add_configuration_for_agent" = "Add a configuration for %@";
+"ui.agent_profiles.shared_settings" = "Settings";
+
+/* Profile detail */
+"ui.profile.no_profile" = "No Profile";
+"ui.profile.profile_name" = "Profile Name";
+"ui.profile.profile_name_detail" = "Only used inside Agents Hub";
+"ui.profile.name_placeholder" = "Name";
+"ui.profile.base_url" = "Base URL";
+"ui.profile.api_key" = "API Key";
+"ui.profile.api_key_detail" = "Stored in Agents Hub profiles and written to CLI config";
+"ui.profile.model" = "Model";
+"ui.profile.codex_provider_name" = "Provider Name";
+"ui.profile.codex_provider_name_detail" = "Written to model_providers.agents-hub.name";
+"ui.profile.codex_provider_name_agents_hub" = "Agents Hub";
+"ui.profile.codex_provider_name_profile" = "Profile Name";
+"ui.profile.default_opus_model" = "Default Opus Model";
+"ui.profile.default_sonnet_model" = "Default Sonnet Model";
+"ui.profile.default_haiku_model" = "Default Haiku Model";
+"ui.profile.skip_claude_onboarding" = "Skip Claude Onboarding";
+"ui.profile.skip_claude_onboarding_detail" = "Skip Claude Code first-run confirmation when using a third-party API";
+"ui.profile.configuration_files" = "Configuration Files";
+"ui.profile.apply_target" = "Apply Target";
+"ui.profile.target_claude_detail" = "Writes env values into Claude Code settings";
+"ui.profile.target_codex_detail" = "Writes provider TOML and API key auth JSON";
+"ui.profile.default_url" = "Default: %@";
+"ui.profile.model_detail_claude" = "Claude Code settings.model and ANTHROPIC_MODEL";
+"ui.profile.model_detail_codex" = "Default model requested by the CLI";
+"ui.hint.hide_api_key" = "Hide API key";
+"ui.hint.show_api_key" = "Show API key";
+
+/* Status */
+"status.not_checked" = "Not checked";
+"status.checking" = "Checking";
+"status.ok" = "OK";
+"status.ok_with_latency" = "%lld ms";
+"status.timed_out" = "Timed out";
+"status.not_configured" = "Not configured";
+"status.profile_saved" = "%@ saved.";
+"status.profile_saved_and_applied" = "%@ saved and applied to %@.";
+"status.profile_applied" = "%@ applied to %@.";
+"status.claude_onboarding_updated" = "Claude onboarding state updated.";
+
+/* Defaults */
+"profile.default_name" = "%@ Config %lld";
+"profile.copy_name" = "%@ Copy";
+
+/* Errors */
+"error.invalid_url" = "Invalid URL";

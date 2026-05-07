@@ -1,0 +1,44 @@
+{
+  "configurations": [
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:agent-hub}",
+      "name": "Debug AgentHub",
+      "target": "AgentHub",
+      "configuration": "debug",
+      "preLaunchTask": "swift: Build Debug AgentHub"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:agent-hub}",
+      "name": "Release AgentHub",
+      "target": "AgentHub",
+      "configuration": "release",
+      "preLaunchTask": "swift: Build Release AgentHub"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:agent-hub}",
+      "name": "Debug AgentsHub",
+      "target": "AgentsHub",
+      "configuration": "debug",
+      "preLaunchTask": "swift: Build Debug AgentsHub"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:agent-hub}",
+      "name": "Release AgentsHub",
+      "target": "AgentsHub",
+      "configuration": "release",
+      "preLaunchTask": "swift: Build Release AgentsHub"
+    }
+  ]
+}

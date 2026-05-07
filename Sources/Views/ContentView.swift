@@ -1,0 +1,251 @@
+import AppKit
+import SwiftUI
+
+enum DetailRoute: Hashable {
+    case profile(UUID)
+}
+
+struct ContentView: View {
+    @Environment(LocalizationManager.self) private var lm
+    @Bindable var manager: ProfileManager
+    @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
+    @State private var sidebarSelection: SidebarSelection? = .overview
+    @State private var detailPath: [DetailRoute] = []
+    @State private var overviewRefreshTrigger = 0
+    @State private var visibleFeedback: AppFeedback?
+    @State private var feedbackDismissTask: Task<Void, Never>?
+
+    var body: some View {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
+            SidebarView(manager: manager, selection: $sidebarSelection)
+                .navigationSplitViewColumnWidth(min: 220, ideal: 240, max: 300)
+        } detail: {
+            NavigationStack(path: $detailPath) {
+                detailRoot
+                    .id(sidebarSelection)
+                    .navigationDestination(for: DetailRoute.self) { route in
+                        switch route {
+                        case .profile(let id):
+                            ProfileDetailView(manager: manager, profileID: id)
+                        }
+                    }
+            }
+        }
+        .overlay(alignment: .bottomTrailing) {
+            if let visibleFeedback {
+                FeedbackToast(feedback: visibleFeedback)
+                    .padding(.bottom, 16)
+                    .padding(.trailing, 18)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .navigationSplitViewStyle(.balanced)
+        .animation(.spring(response: 0.28, dampingFraction: 0.86), value: visibleFeedback)
+        .onChange(of: sidebarSelection) { _, selection in
+            switch selection {
+            case .overview, .settings, .none:
+                detailPath.removeAll()
+            case .agent(let provider):
+                manager.selectedProvider = provider
+                detailPath.removeAll()
+            }
+        }
+        .onChange(of: manager.feedbackRevision) { _, _ in
+            showLatestFeedback()
+        }
+        .toolbar {
+            if isOverview {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        overviewRefreshTrigger += 1
+                    } label: {
+                        L.label("ui.action.refresh", systemImage: "arrow.clockwise", using: lm)
+                    }
+                    .help(L.string("ui.hint.refresh_dashboard", using: lm))
+                }
+            }
+
+            if isShowingAgentList {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        manager.addProfile(for: currentProvider)
+                        if let profileID = manager.selectedProfileIDs[manager.selectedProvider] {
+                            detailPath = [.profile(profileID)]
+                        }
+                    } label: {
+                        L.label("ui.action.add_configuration", systemImage: "plus", using: lm)
+                    }
+                    .help(L.string("ui.hint.add_configuration_selected_agent", using: lm))
+                }
+            }
+
+            if isEditingProfile {
+                ToolbarItemGroup(placement: .primaryAction) {
+                    Button {
+                        manager.duplicateSelectedProfile()
+                        if let profileID = manager.selectedProfileIDs[manager.selectedProvider] {
+                            detailPath = [.profile(profileID)]
+                        }
+                    } label: {
+                        L.label("ui.action.duplicate", systemImage: "doc.on.doc", using: lm)
+                    }
+                    .help(L.string("ui.hint.duplicate_configuration", using: lm))
+
+                    Button {
+                        manager.removeSelectedProfile()
+                        detailPath.removeAll()
+                    } label: {
+                        L.label("ui.action.delete", systemImage: "trash", using: lm)
+                    }
+                    .disabled(manager.profiles(for: manager.selectedProvider).count <= 1)
+                    .help(L.string("ui.hint.delete_configuration", using: lm))
+
+                    Button {
+                        manager.applySelectedProfile()
+                    } label: {
+                        if isSelectedProfileActive {
+                            L.label("ui.action.set_current", systemImage: "checkmark.circle", using: lm)
+                                .foregroundStyle(.green)
+                        } else {
+                            L.label("ui.action.set_current", systemImage: "checkmark.circle", using: lm)
+                        }
+                    }
+                    .keyboardShortcut(.return, modifiers: .command)
+                    .disabled(manager.selectedProfile?.isReady != true)
+                    .help(L.string("ui.hint.set_current_configuration", using: lm))
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var detailRoot: some View {
+        switch sidebarSelection {
+        case .agent(let provider):
+            AgentProfilesView(manager: manager, provider: provider, path: $detailPath)
+        case .settings:
+            SettingsView()
+        case .overview, .none:
+            HomeDashboardView(
+                manager: manager,
+                sidebarSelection: $sidebarSelection,
+                refreshTrigger: overviewRefreshTrigger
+            )
+        }
+    }
+
+    private var currentProvider: ProviderKind? {
+        switch sidebarSelection {
+        case .agent(let provider):
+            provider
+        case .overview, .settings, .none:
+            nil
+        }
+    }
+
+    private var isEditingProfile: Bool {
+        if case .profile = detailPath.last {
+            return true
+        }
+
+        return false
+    }
+
+    private var isOverview: Bool {
+        switch sidebarSelection {
+        case .overview, .none:
+            true
+        case .agent, .settings:
+            false
+        }
+    }
+
+    private var isShowingAgentList: Bool {
+        currentProvider != nil && detailPath.isEmpty
+    }
+
+    private var isSelectedProfileActive: Bool {
+        manager.selectedProfile?.isActive == true
+    }
+
+    private func showLatestFeedback() {
+        guard let feedback = AppFeedback(status: manager.statusMessage, error: manager.errorMessage) else {
+            return
+        }
+
+        feedbackDismissTask?.cancel()
+        visibleFeedback = feedback
+        feedbackDismissTask = Task {
+            try? await Task.sleep(for: .seconds(2.6))
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                visibleFeedback = nil
+            }
+        }
+    }
+}
+
+private struct AppFeedback: Equatable {
+    let message: String
+    let style: Style
+
+    init?(status: String?, error: String?) {
+        if let error {
+            self.message = error
+            self.style = .error
+        } else if let status {
+            self.message = status
+            self.style = .success
+        } else {
+            return nil
+        }
+    }
+
+    enum Style: Equatable {
+        case success
+        case error
+
+        var iconName: String {
+            switch self {
+            case .success:
+                "checkmark.circle.fill"
+            case .error:
+                "exclamationmark.triangle.fill"
+            }
+        }
+
+        var tint: Color {
+            switch self {
+            case .success:
+                .green
+            case .error:
+                .red
+            }
+        }
+    }
+}
+
+private struct FeedbackToast: View {
+    let feedback: AppFeedback
+
+    var body: some View {
+        Label {
+            Text(feedback.message)
+                .font(.caption.weight(.medium))
+                .lineLimit(2)
+        } icon: {
+            Image(systemName: feedback.style.iconName)
+                .foregroundStyle(feedback.style.tint)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 9)
+        .frame(maxWidth: 280, alignment: .leading)
+        .background(.regularMaterial, in: Capsule(style: .continuous))
+        .overlay {
+            Capsule(style: .continuous)
+                .stroke(Color(nsColor: .separatorColor).opacity(0.18), lineWidth: 1)
+        }
+        .shadow(color: .black.opacity(0.13), radius: 16, y: 8)
+        .allowsHitTesting(false)
+    }
+}

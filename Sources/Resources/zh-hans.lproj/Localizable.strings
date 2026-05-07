@@ -1,0 +1,94 @@
+/* App */
+"ui.settings.about" = "关于";
+"ui.settings.title" = "设置";
+"ui.settings.general" = "通用";
+"ui.settings.language" = "语言";
+"ui.settings.storage" = "存储";
+"ui.settings.config_path" = "配置路径";
+
+/* Common actions */
+"ui.action.add_configuration" = "添加配置";
+"ui.action.duplicate" = "复制";
+"ui.action.delete" = "删除";
+"ui.action.set_current" = "设为当前";
+"ui.action.refresh" = "刷新";
+"ui.action.reveal_in_finder" = "在 Finder 中显示";
+
+/* Common labels */
+"ui.label.active" = "已启用";
+"ui.label.agents" = "智能体";
+"ui.label.current" = "当前";
+"ui.label.no_base_url" = "无 Base URL";
+"ui.label.no_current_configuration" = "暂无当前配置";
+"ui.label.no_key" = "无密钥";
+"ui.label.no_local_installation" = "未检测到本地安装";
+"ui.label.not_found" = "未找到";
+"ui.label.not_installed" = "未安装";
+
+/* Sidebar */
+"ui.sidebar.overview" = "概览";
+"ui.sidebar.settings" = "设置";
+
+/* Toolbar help */
+"ui.hint.add_configuration_selected_agent" = "为选中的智能体添加配置";
+"ui.hint.duplicate_configuration" = "复制选中的配置";
+"ui.hint.delete_configuration" = "删除选中的配置";
+"ui.hint.set_current_configuration" = "将选中的配置设为当前配置";
+
+/* Dashboard */
+"ui.dashboard.agent_status" = "智能体状态";
+"ui.dashboard.local_versions" = "本地版本";
+"ui.hint.refresh_dashboard" = "刷新 API 检查和本地版本";
+
+/* Agent profiles */
+"ui.agent_profiles.configurations" = "配置";
+"ui.agent_profiles.saved_count" = "已保存 %lld 个";
+"ui.hint.add_configuration_for_agent" = "为 %@ 添加配置";
+"ui.agent_profiles.shared_settings" = "设置";
+
+/* Profile detail */
+"ui.profile.no_profile" = "无配置";
+"ui.profile.profile_name" = "配置名称";
+"ui.profile.profile_name_detail" = "仅在 Agents Hub 中使用";
+"ui.profile.name_placeholder" = "名称";
+"ui.profile.base_url" = "Base URL";
+"ui.profile.api_key" = "API Key";
+"ui.profile.api_key_detail" = "存储在 Agents Hub 配置中，并写入 CLI 配置";
+"ui.profile.model" = "模型";
+"ui.profile.codex_provider_name" = "供应商名称";
+"ui.profile.codex_provider_name_detail" = "写入 model_providers.agents-hub.name";
+"ui.profile.codex_provider_name_agents_hub" = "Agents Hub";
+"ui.profile.codex_provider_name_profile" = "配置名称";
+"ui.profile.default_opus_model" = "默认 Opus 模型";
+"ui.profile.default_sonnet_model" = "默认 Sonnet 模型";
+"ui.profile.default_haiku_model" = "默认 Haiku 模型";
+"ui.profile.skip_claude_onboarding" = "跳过 Claude 初始引导";
+"ui.profile.skip_claude_onboarding_detail" = "使用第三方 API 时跳过 Claude Code 初次安装确认";
+"ui.profile.configuration_files" = "配置文件";
+"ui.profile.apply_target" = "应用目标";
+"ui.profile.target_claude_detail" = "将 env 值写入 Claude Code 设置";
+"ui.profile.target_codex_detail" = "写入 provider TOML 和 API key 认证 JSON";
+"ui.profile.default_url" = "默认：%@";
+"ui.profile.model_detail_claude" = "Claude Code settings.model 和 ANTHROPIC_MODEL";
+"ui.profile.model_detail_codex" = "CLI 默认请求的模型";
+"ui.hint.hide_api_key" = "隐藏 API key";
+"ui.hint.show_api_key" = "显示 API key";
+
+/* Status */
+"status.not_checked" = "未检查";
+"status.checking" = "检查中";
+"status.ok" = "正常";
+"status.ok_with_latency" = "%lld ms";
+"status.timed_out" = "超时";
+"status.not_configured" = "未配置";
+"status.profile_saved" = "%@ 已保存。";
+"status.profile_saved_and_applied" = "%@ 已保存并应用到 %@。";
+"status.profile_applied" = "%@ 已应用到 %@。";
+"status.claude_onboarding_updated" = "Claude 初始引导状态已更新。";
+
+/* Defaults */
+"profile.default_name" = "%@ 配置 %lld";
+"profile.copy_name" = "%@ 副本";
+
+/* Errors */
+"error.invalid_url" = "无效 URL";
