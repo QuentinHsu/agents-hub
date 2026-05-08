@@ -1,0 +1,103 @@
+name: Debug Release DMG
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to test (e.g., v0.0.2)"
+        required: true
+        type: string
+
+jobs:
+  debug-changelog:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install Copilot CLI
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+        run: |
+          if [[ -n "${COPILOT_GITHUB_TOKEN:-}" ]]; then
+            npm install -g @github/copilot
+            echo "✅ Copilot installed"
+          else
+            echo "⚠️  No COPILOT_GITHUB_TOKEN found"
+          fi
+
+      - name: Checkout release kit
+        uses: actions/checkout@v6
+        with:
+          repository: QuentinHsu/workflow
+          ref: main
+          path: release-kit
+
+      - name: Check CHANGELOG.md before generation
+        run: |
+          echo "=== Checking if CHANGELOG.md exists ==="
+          if [[ -f CHANGELOG.md ]]; then
+            echo "❌ CHANGELOG.md already exists!"
+            echo "Content:"
+            cat CHANGELOG.md
+          else
+            echo "✅ CHANGELOG.md does not exist"
+          fi
+
+      - name: Generate changelog
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+        run: |
+          changelog_summary_command=""
+          if [[ -n "${COPILOT_GITHUB_TOKEN:-}" ]]; then
+            changelog_summary_command='copilot -s --no-ask-user -p "$(cat {prompt_file})"'
+            echo "✅ Using Copilot for summary"
+          else
+            echo "⚠️  Using local fallback for summary"
+          fi
+
+          export CHANGELOG_SUMMARY_COMMAND="$changelog_summary_command"
+
+          echo "=== Running changelog script ==="
+          python3 "release-kit/release-kits/macos/swiftpm-sparkle/Scripts/update_changelog.py" \
+            --version "${{ github.event.inputs.tag }}" \
+            --from-ref "" \
+            --to-ref HEAD \
+            --changelog "CHANGELOG.md" \
+            --project-name "Agents Hub" \
+            --language "zh-CN" \
+            --mode write
+
+          echo "=== Script completed ==="
+
+      - name: Check CHANGELOG.md after generation
+        run: |
+          echo "=== Checking if CHANGELOG.md was created ==="
+          if [[ -f CHANGELOG.md ]]; then
+            echo "✅ CHANGELOG.md exists"
+            echo "File size: $(wc -c < CHANGELOG.md) bytes"
+            echo "Content:"
+            cat CHANGELOG.md
+          else
+            echo "❌ CHANGELOG.md was NOT created!"
+            exit 1
+          fi
+
+      - name: Check git diff
+        run: |
+          echo "=== Git status ==="
+          git status
+          echo ""
+          echo "=== Git diff ==="
+          git diff CHANGELOG.md || echo "No diff"
+          echo ""
+          echo "=== Git diff --quiet result ==="
+          if git diff --quiet -- CHANGELOG.md; then
+            echo "❌ git diff --quiet says: NO CHANGES"
+          else
+            echo "✅ git diff --quiet says: CHANGES DETECTED"
+          fi
