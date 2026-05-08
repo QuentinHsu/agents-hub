@@ -14,14 +14,9 @@ struct HomeDashboardView: View {
     @State private var isLoadingVersions = false
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                agentConfigurations
-                localVersions
-            }
-            .padding(.horizontal, 28)
-            .padding(.vertical, 24)
-            .frame(maxWidth: .infinity, alignment: .leading)
+        SettingsPageContent {
+            agentConfigurations
+            localVersions
         }
         .task {
             await refreshAll()
@@ -130,7 +125,11 @@ struct HomeDashboardView: View {
         missing: Bool
     ) -> some View {
         SettingsRow {
-            FieldTitle(title, detail: detail ?? L.string("ui.label.no_local_installation", using: lm))
+            FieldLabel(
+                title,
+                detail: detail ?? L.string("ui.label.no_local_installation", using: lm),
+                detailLineLimit: 1
+            )
         } trailing: {
             Text(version)
                 .font(.subheadline.weight(.medium))
@@ -240,30 +239,6 @@ private extension AgentEndpointStatus {
             L.string("status.timed_out", using: lm)
         case .notConfigured:
             L.string("status.not_configured", using: lm)
-        }
-    }
-}
-
-private struct FieldTitle: View {
-    let title: String
-    let detail: String?
-
-    init(_ title: String, detail: String? = nil) {
-        self.title = title
-        self.detail = detail
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title)
-                .font(.subheadline.weight(.medium))
-            if let detail {
-                Text(detail)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-            }
         }
     }
 }

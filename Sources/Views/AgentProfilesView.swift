@@ -8,17 +8,12 @@ struct AgentProfilesView: View {
     @Binding var path: [DetailRoute]
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                if provider == .claudeCode {
-                    claudeSharedSettings
-                }
-                profilesList
-                targetFiles
+        SettingsPageContent {
+            if provider == .claudeCode {
+                claudeSharedSettings
             }
-            .padding(.horizontal, 28)
-            .padding(.vertical, 24)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            profilesList
+            targetFiles
         }
         .navigationTitle(provider.displayName)
     }
@@ -65,9 +60,10 @@ struct AgentProfilesView: View {
     private var claudeSharedSettings: some View {
         VStack(alignment: .leading, spacing: 0) {
             SettingsRow {
-                FieldTitle(
+                FieldLabel(
                     L.string("ui.profile.skip_claude_onboarding", using: lm),
-                    detail: L.string("ui.profile.skip_claude_onboarding_detail", using: lm)
+                    detail: L.string("ui.profile.skip_claude_onboarding_detail", using: lm),
+                    detailLineLimit: 1
                 )
             } trailing: {
                 Toggle("", isOn: skipClaudeOnboardingBinding())
@@ -167,27 +163,5 @@ struct AgentProfilesView: View {
     private func reveal(_ url: URL) {
         let directory = url.deletingLastPathComponent()
         NSWorkspace.shared.selectFile(url.path(), inFileViewerRootedAtPath: directory.path())
-    }
-}
-
-private struct FieldTitle: View {
-    let title: String
-    let detail: String
-
-    init(_ title: String, detail: String) {
-        self.title = title
-        self.detail = detail
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title)
-                .font(.subheadline.weight(.medium))
-            Text(detail)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .truncationMode(.middle)
-        }
     }
 }

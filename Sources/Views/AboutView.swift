@@ -6,49 +6,44 @@ struct AboutView: View {
     let appUpdater: AppUpdater
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                appHeader
+        SettingsPageContent(horizontalPadding: 22, verticalPadding: 18) {
+            appHeader
 
-                VStack(alignment: .leading, spacing: 0) {
-                    SettingsRow {
-                        AboutRowTitle(L.string("ui.settings.version", using: lm))
-                    } trailing: {
-                        Text(AppInfo.versionDisplay)
-                            .font(.subheadline.weight(.medium))
-                            .foregroundStyle(.secondary)
-                    }
-
-                    SettingsDivider()
-
-                    SettingsRow {
-                        AboutRowTitle(L.string("ui.settings.source_repository", using: lm))
-                    } trailing: {
-                        Link(
-                            AppInfo.sourceRepository.absoluteString,
-                            destination: AppInfo.sourceRepository
-                        )
-                        .font(.subheadline)
-                    }
-
-                    SettingsDivider()
-
-                    SettingsRow {
-                        AboutRowTitle(L.string("ui.app.updates", using: lm))
-                    } trailing: {
-                        Button {
-                            appUpdater.checkForUpdates()
-                        } label: {
-                            Label(L.string("ui.app.check_for_updates", using: lm), systemImage: "arrow.down.circle")
-                        }
-                        .font(.subheadline)
-                    }
+            VStack(alignment: .leading, spacing: 0) {
+                SettingsRow {
+                    AboutRowTitle(L.string("ui.settings.version", using: lm))
+                } trailing: {
+                    Text(AppInfo.versionDisplay)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.secondary)
                 }
-                .settingsCard()
+
+                SettingsDivider()
+
+                SettingsRow {
+                    AboutRowTitle(L.string("ui.settings.source_repository", using: lm))
+                } trailing: {
+                    Link(
+                        AppInfo.sourceRepository.absoluteString,
+                        destination: AppInfo.sourceRepository
+                    )
+                    .font(.subheadline)
+                }
+
+                SettingsDivider()
+
+                SettingsRow {
+                    AboutRowTitle(L.string("ui.app.updates", using: lm))
+                } trailing: {
+                    Button {
+                        appUpdater.checkForUpdates()
+                    } label: {
+                        Label(L.string("ui.app.check_for_updates", using: lm), systemImage: "arrow.down.circle")
+                    }
+                    .font(.subheadline)
+                }
             }
-            .padding(.horizontal, 22)
-            .padding(.vertical, 18)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .settingsCard()
         }
         .navigationTitle(L.string("ui.settings.about", using: lm))
     }

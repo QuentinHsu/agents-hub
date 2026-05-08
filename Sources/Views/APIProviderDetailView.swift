@@ -20,13 +20,8 @@ struct APIProviderDetailView: View {
     var body: some View {
         Group {
             if let apiProvider {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 18) {
-                        providerForm(for: apiProvider)
-                    }
-                    .padding(.horizontal, 28)
-                    .padding(.vertical, 24)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                SettingsPageContent {
+                    providerForm(for: apiProvider)
                 }
                 .navigationTitle(apiProvider.name)
             } else {

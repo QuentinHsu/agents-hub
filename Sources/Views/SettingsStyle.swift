@@ -10,6 +10,33 @@ enum FormConstants {
 
 // MARK: - Settings Components
 
+struct SettingsPageContent<Content: View>: View {
+    let horizontalPadding: CGFloat
+    let verticalPadding: CGFloat
+    let content: Content
+
+    init(
+        horizontalPadding: CGFloat = 28,
+        verticalPadding: CGFloat = 24,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.horizontalPadding = horizontalPadding
+        self.verticalPadding = verticalPadding
+        self.content = content()
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                content
+            }
+            .padding(.horizontal, horizontalPadding)
+            .padding(.vertical, verticalPadding)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
 struct SettingsRow<Leading: View, Trailing: View>: View {
     private let leading: Leading
     private let trailing: Trailing
@@ -49,23 +76,62 @@ struct SettingsDivider: View {
 
 struct FieldLabel: View {
     let title: String
-    let detail: String
+    let detail: String?
+    let detailLineLimit: Int?
 
-    init(_ title: String, detail: String = "") {
+    init(_ title: String, detail: String? = nil, detailLineLimit: Int? = nil) {
         self.title = title
         self.detail = detail
+        self.detailLineLimit = detailLineLimit
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title)
                 .font(.subheadline.weight(.medium))
-            if !detail.isEmpty {
+            if let detail, !detail.isEmpty {
                 Text(detail)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .lineLimit(detailLineLimit)
+                    .truncationMode(.middle)
             }
         }
+    }
+}
+
+struct SettingsItemRow<Trailing: View>: View {
+    let title: String
+    let detail: String?
+    let trailing: Trailing
+
+    init(
+        title: String,
+        detail: String? = nil,
+        @ViewBuilder trailing: () -> Trailing
+    ) {
+        self.title = title
+        self.detail = detail
+        self.trailing = trailing()
+    }
+
+    var body: some View {
+        SettingsRow {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.subheadline.weight(.medium))
+                if let detail {
+                    Text(detail)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        } trailing: {
+            trailing
+        }
+        .frame(minHeight: 44)
     }
 }
 

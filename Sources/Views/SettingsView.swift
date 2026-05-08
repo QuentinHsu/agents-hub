@@ -7,14 +7,9 @@ struct SettingsView: View {
     @State private var isShowingResetConfirmation = false
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                generalSettings
-                storageSettings
-            }
-            .padding(.horizontal, 22)
-            .padding(.vertical, 18)
-            .frame(maxWidth: .infinity, alignment: .leading)
+        SettingsPageContent(horizontalPadding: 22, verticalPadding: 18) {
+            generalSettings
+            storageSettings
         }
         .navigationTitle(L.string("ui.settings.title", using: lm))
         .confirmationDialog(
@@ -98,44 +93,5 @@ struct SettingsView: View {
     private func reveal(_ url: URL) {
         let directory = url.hasDirectoryPath ? url : url.deletingLastPathComponent()
         NSWorkspace.shared.selectFile(url.path(), inFileViewerRootedAtPath: directory.deletingLastPathComponent().path())
-    }
-}
-
-private struct SettingsItemRow<Trailing: View>: View {
-    let title: String
-    let detail: String?
-    let trailing: Trailing
-
-    init(
-        title: String,
-        detail: String? = nil,
-        @ViewBuilder trailing: () -> Trailing
-    ) {
-        self.title = title
-        self.detail = detail
-        self.trailing = trailing()
-    }
-
-    var body: some View {
-        HStack(alignment: .center, spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title)
-                    .font(.subheadline.weight(.medium))
-                if let detail {
-                    Text(detail)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-
-            Spacer(minLength: 16)
-
-            trailing
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 9)
-        .frame(maxWidth: .infinity, minHeight: 44)
     }
 }

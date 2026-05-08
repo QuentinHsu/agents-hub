@@ -6,13 +6,8 @@ struct APIProvidersView: View {
     @Binding var path: [DetailRoute]
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                apiProviderList
-            }
-            .padding(.horizontal, 28)
-            .padding(.vertical, 24)
-            .frame(maxWidth: .infinity, alignment: .leading)
+        SettingsPageContent {
+            apiProviderList
         }
         .navigationTitle(L.string("ui.api_providers.title", using: lm))
         .toolbar {
@@ -131,27 +126,5 @@ struct APIProvidersView: View {
         else { return nil }
 
         return url
-    }
-}
-
-private struct FieldTitle: View {
-    let title: String
-    let detail: String
-
-    init(_ title: String, detail: String) {
-        self.title = title
-        self.detail = detail
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title)
-                .font(.subheadline.weight(.medium))
-            Text(detail)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .truncationMode(.middle)
-        }
     }
 }

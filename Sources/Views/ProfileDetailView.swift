@@ -19,13 +19,8 @@ struct ProfileDetailView: View {
     var body: some View {
         Group {
             if let profile {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 18) {
-                        profileForm(for: profile)
-                    }
-                    .padding(.horizontal, 28)
-                    .padding(.vertical, 24)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                SettingsPageContent {
+                    profileForm(for: profile)
                 }
             } else {
                 ContentUnavailableView(L.string("ui.profile.no_profile", using: lm), systemImage: "switch.2")
