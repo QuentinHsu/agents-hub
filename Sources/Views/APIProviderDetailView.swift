@@ -116,7 +116,7 @@ struct APIProviderDetailView: View {
                 .frame(width: FormConstants.fieldWidth, alignment: .leading)
             }
         }
-        .settingsCard(apiProvider.name)
+        .settingsCard()
     }
 
     private func keysCard(for apiProvider: APIProvider) -> some View {
@@ -148,10 +148,7 @@ struct APIProviderDetailView: View {
     private func keyEditor(_ key: APIProviderKey, in apiProvider: APIProvider) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             SettingsRow {
-                FieldLabel(
-                    L.string("ui.api_provider.key_name", using: lm),
-                    detail: key.redactedKey
-                )
+                FieldLabel(L.string("ui.api_provider.key_name", using: lm))
             } trailing: {
                 HStack(spacing: 8) {
                     TextField(
@@ -179,10 +176,7 @@ struct APIProviderDetailView: View {
             SettingsDivider()
 
             SettingsRow {
-                FieldLabel(
-                    L.string("ui.profile.api_key", using: lm),
-                    detail: L.string("ui.api_provider.key_api_key_detail", using: lm)
-                )
+                FieldLabel(L.string("ui.profile.api_key", using: lm))
             } trailing: {
                 HStack(spacing: 8) {
                     Group {

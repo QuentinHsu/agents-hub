@@ -31,6 +31,7 @@ struct ProfileDetailView: View {
                 ContentUnavailableView(L.string("ui.profile.no_profile", using: lm), systemImage: "switch.2")
             }
         }
+        .navigationTitle(draftProfile?.name ?? profile?.name ?? "")
         .onAppear {
             selectRoutedProfile()
             syncDraftProfile()
@@ -88,10 +89,6 @@ struct ProfileDetailView: View {
                 SettingsDivider()
             }
 
-            apiProviderSummary(for: profile)
-
-            SettingsDivider()
-
             SettingsRow {
                 FieldLabel(L.string("ui.profile.model", using: lm), detail: modelDetail(for: profile.provider))
             } trailing: {
@@ -111,34 +108,7 @@ struct ProfileDetailView: View {
                 claudeModelFields()
             }
         }
-        .settingsCard(profile.name)
-    }
-
-    private func apiProviderSummary(for profile: APIProfile) -> some View {
-        let apiProvider = manager.apiProvider(for: profile)
-        let key = manager.apiProviderKey(for: profile)
-
-        return SettingsRow {
-            FieldLabel(
-                L.string("ui.profile.api_provider_data", using: lm),
-                detail: providerKeySummary(apiProvider: apiProvider, key: key)
-            )
-        } trailing: {
-            VStack(alignment: .trailing, spacing: 3) {
-                Text(apiProvider?.baseURL.nilIfBlank ?? L.string("ui.label.no_base_url", using: lm))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-
-                Text(key?.redactedKey ?? L.string("ui.label.no_key", using: lm))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-            }
-            .frame(width: FormConstants.fieldWidth, alignment: .trailing)
-        }
+        .settingsCard()
     }
 
     private func apiProviderKeyPicker(for profile: APIProfile, apiProvider: APIProvider) -> some View {
@@ -299,12 +269,6 @@ struct ProfileDetailView: View {
             draftProfile?.apiProviderKeyID = newValue
             commitDraftProfile()
         }
-    }
-
-    private func providerKeySummary(apiProvider: APIProvider?, key: APIProviderKey?) -> String {
-        guard let apiProvider else { return L.string("ui.api_provider.no_provider", using: lm) }
-        guard apiProvider.keys.count > 1, let key else { return apiProvider.name }
-        return "\(apiProvider.name) · \(key.name)"
     }
 
     private func selectRoutedProfile() {
