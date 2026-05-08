@@ -35,17 +35,6 @@ struct HomeDashboardView: View {
 
     private var agentConfigurations: some View {
         VStack(alignment: .leading, spacing: 0) {
-            SettingsRow {
-                FieldTitle(L.string("ui.dashboard.agent_status", using: lm))
-            } trailing: {
-                if isCheckingEndpoints {
-                    ProgressView()
-                        .controlSize(.small)
-                }
-            }
-
-            SettingsDivider()
-
             ForEach(ProviderKind.allCases) { provider in
                 Button {
                     manager.selectedProvider = provider
@@ -60,22 +49,11 @@ struct HomeDashboardView: View {
                 }
             }
         }
-        .settingsCard()
+        .settingsCard(L.string("ui.dashboard.agent_status", using: lm))
     }
 
     private var localVersions: some View {
         VStack(alignment: .leading, spacing: 0) {
-            SettingsRow {
-                FieldTitle(L.string("ui.dashboard.local_versions", using: lm))
-            } trailing: {
-                if isLoadingVersions {
-                    ProgressView()
-                        .controlSize(.small)
-                }
-            }
-
-            SettingsDivider()
-
             ForEach(toolVersions, id: \.name) { tool in
                 versionRow(
                     title: tool.name,
@@ -99,7 +77,7 @@ struct HomeDashboardView: View {
                 }
             }
         }
-        .settingsCard()
+        .settingsCard(L.string("ui.dashboard.local_versions", using: lm))
     }
 
     private func agentStatusRow(for provider: ProviderKind) -> some View {

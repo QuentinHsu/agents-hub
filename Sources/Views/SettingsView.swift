@@ -31,24 +31,22 @@ struct SettingsView: View {
     }
 
     private var generalSettings: some View {
-        SettingsSectionCard(title: L.string("ui.settings.general", using: lm)) {
+        VStack(alignment: .leading, spacing: 0) {
             SettingsItemRow(
                 title: L.string("ui.settings.language", using: lm)
             ) {
-                Picker("", selection: Bindable(lm).currentLanguage) {
+                SettingsSelect(lm.currentLanguage.displayName, selection: Bindable(lm).currentLanguage) {
                     ForEach(AppLanguage.allCases) { lang in
                         Text(lang.displayName).tag(lang)
                     }
                 }
-                .pickerStyle(.menu)
-                .labelsHidden()
-                .controlSize(.small)
             }
         }
+        .settingsCard(L.string("ui.settings.general", using: lm))
     }
 
     private var storageSettings: some View {
-        SettingsSectionCard(title: L.string("ui.settings.storage", using: lm)) {
+        VStack(alignment: .leading, spacing: 0) {
             SettingsItemRow(
                 title: L.string("ui.settings.config_path", using: lm)
             ) {
@@ -94,39 +92,12 @@ struct SettingsView: View {
                 .help(L.string("ui.settings.reset_data", using: lm))
             }
         }
+        .settingsCard(L.string("ui.settings.storage", using: lm))
     }
 
     private func reveal(_ url: URL) {
         let directory = url.hasDirectoryPath ? url : url.deletingLastPathComponent()
         NSWorkspace.shared.selectFile(url.path(), inFileViewerRootedAtPath: directory.deletingLastPathComponent().path())
-    }
-}
-
-private struct SettingsSectionCard<Content: View>: View {
-    let title: String
-    let content: Content
-
-    init(title: String, @ViewBuilder content: () -> Content) {
-        self.title = title
-        self.content = content()
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text(title)
-                .font(.caption.weight(.semibold))
-                .padding(.horizontal, 12)
-                .padding(.top, 11)
-                .padding(.bottom, 7)
-
-            content
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.quaternary.opacity(0.34), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(Color(nsColor: .separatorColor).opacity(0.08), lineWidth: 1)
-        }
     }
 }
 

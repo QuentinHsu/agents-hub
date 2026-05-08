@@ -25,19 +25,6 @@ struct AgentProfilesView: View {
 
     private var profilesList: some View {
         VStack(alignment: .leading, spacing: 0) {
-            SettingsRow {
-                FieldTitle(
-                    L.string("ui.agent_profiles.configurations", using: lm),
-                    detail: L.string(
-                        "ui.agent_profiles.saved_count",
-                        Int64(manager.profiles(for: provider).count),
-                        using: lm
-                    )
-                )
-            }
-
-            SettingsDivider()
-
             ForEach(manager.profiles(for: provider)) { profile in
                 Button {
                     manager.selectProfile(profile)
@@ -72,7 +59,14 @@ struct AgentProfilesView: View {
                 }
             }
         }
-        .settingsCard()
+        .settingsCard(
+            L.string("ui.agent_profiles.configurations", using: lm),
+            subtitle: L.string(
+                "ui.agent_profiles.saved_count",
+                Int64(manager.profiles(for: provider).count),
+                using: lm
+            )
+        )
     }
 
     private var claudeSharedSettings: some View {
@@ -92,12 +86,6 @@ struct AgentProfilesView: View {
 
     private var targetFiles: some View {
         VStack(alignment: .leading, spacing: 0) {
-            SettingsRow {
-                FieldTitle(L.string("ui.profile.configuration_files", using: lm), detail: targetDescription)
-            }
-
-            SettingsDivider()
-
             ForEach(targetURLs, id: \.self) { url in
                 SettingsRow {
                     Text(url.path())
@@ -116,7 +104,7 @@ struct AgentProfilesView: View {
                 }
             }
         }
-        .settingsCard(L.string("ui.profile.apply_target", using: lm))
+        .settingsCard(L.string("ui.profile.apply_target", using: lm), subtitle: targetDescription)
     }
 
     private func profileRow(_ profile: APIProfile) -> some View {

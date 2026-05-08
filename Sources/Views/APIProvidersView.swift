@@ -32,19 +32,6 @@ struct APIProvidersView: View {
 
     private var apiProviderList: some View {
         VStack(alignment: .leading, spacing: 0) {
-            SettingsRow {
-                FieldTitle(
-                    L.string("ui.api_providers.title", using: lm),
-                    detail: L.string(
-                        "ui.api_providers.saved_count",
-                        Int64(manager.apiProviders.count),
-                        using: lm
-                    )
-                )
-            }
-
-            SettingsDivider()
-
             ForEach(manager.sortedAPIProviders()) { apiProvider in
                 Button {
                     manager.selectAPIProvider(apiProvider)
@@ -73,7 +60,14 @@ struct APIProvidersView: View {
                 }
             }
         }
-        .settingsCard()
+        .settingsCard(
+            L.string("ui.api_providers.title", using: lm),
+            subtitle: L.string(
+                "ui.api_providers.saved_count",
+                Int64(manager.apiProviders.count),
+                using: lm
+            )
+        )
     }
 
     private func apiProviderRow(_ apiProvider: APIProvider) -> some View {

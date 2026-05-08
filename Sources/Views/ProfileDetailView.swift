@@ -72,12 +72,11 @@ struct ProfileDetailView: View {
                     detail: L.string("ui.profile.api_provider_detail", using: lm)
                 )
             } trailing: {
-                Picker("", selection: apiProviderBinding(for: profile)) {
+                SettingsSelect(selectedAPIProviderName(for: profile), selection: apiProviderBinding(for: profile)) {
                     ForEach(manager.sortedAPIProviders()) { apiProvider in
                         Text(apiProvider.name).tag(Optional(apiProvider.id))
                     }
                 }
-                .labelsHidden()
                 .frame(width: FormConstants.fieldWidth, alignment: .leading)
             }
 
@@ -112,7 +111,7 @@ struct ProfileDetailView: View {
                 claudeModelFields()
             }
         }
-        .settingsCard()
+        .settingsCard(profile.name)
     }
 
     private func apiProviderSummary(for profile: APIProfile) -> some View {
@@ -149,12 +148,14 @@ struct ProfileDetailView: View {
                 detail: L.string("ui.profile.api_provider_key_detail", using: lm)
             )
         } trailing: {
-            Picker("", selection: apiProviderKeyBinding(for: profile, apiProvider: apiProvider)) {
+            SettingsSelect(
+                selectedAPIProviderKeyName(for: profile, apiProvider: apiProvider),
+                selection: apiProviderKeyBinding(for: profile, apiProvider: apiProvider)
+            ) {
                 ForEach(apiProvider.keys) { key in
                     Text(key.name).tag(Optional(key.id))
                 }
             }
-            .labelsHidden()
             .frame(width: FormConstants.fieldWidth, alignment: .leading)
         }
     }
@@ -261,6 +262,16 @@ struct ProfileDetailView: View {
         case .profileName:
             L.string("ui.profile.codex_provider_name_profile", using: lm)
         }
+    }
+
+    private func selectedAPIProviderName(for profile: APIProfile) -> String {
+        let selectedID = draftProfile?.apiProviderID ?? profile.apiProviderID ?? manager.apiProvider(for: profile)?.id
+        return manager.apiProviders.first { $0.id == selectedID }?.name ?? L.string("ui.api_provider.no_provider", using: lm)
+    }
+
+    private func selectedAPIProviderKeyName(for profile: APIProfile, apiProvider: APIProvider) -> String {
+        let selectedID = draftProfile?.apiProviderKeyID ?? profile.apiProviderKeyID ?? apiProvider.keys.first?.id
+        return apiProvider.keys.first { $0.id == selectedID }?.name ?? L.string("ui.label.no_key", using: lm)
     }
 
     private func apiProviderBinding(for profile: APIProfile) -> Binding<UUID?> {

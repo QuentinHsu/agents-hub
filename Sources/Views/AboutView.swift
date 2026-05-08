@@ -12,33 +12,36 @@ struct AboutView: View {
 
                 VStack(alignment: .leading, spacing: 0) {
                     SettingsRow {
-                        L.text("ui.settings.version", using: lm)
+                        AboutRowTitle(L.string("ui.settings.version", using: lm))
                     } trailing: {
                         Text(AppInfo.versionDisplay)
+                            .font(.subheadline.weight(.medium))
                             .foregroundStyle(.secondary)
                     }
 
                     SettingsDivider()
 
                     SettingsRow {
-                        L.text("ui.settings.source_repository", using: lm)
+                        AboutRowTitle(L.string("ui.settings.source_repository", using: lm))
                     } trailing: {
                         Link(
                             AppInfo.sourceRepository.absoluteString,
                             destination: AppInfo.sourceRepository
                         )
+                        .font(.subheadline)
                     }
 
                     SettingsDivider()
 
                     SettingsRow {
-                        L.text("ui.app.updates", using: lm)
+                        AboutRowTitle(L.string("ui.app.updates", using: lm))
                     } trailing: {
                         Button {
                             appUpdater.checkForUpdates()
                         } label: {
                             Label(L.string("ui.app.check_for_updates", using: lm), systemImage: "arrow.down.circle")
                         }
+                        .font(.subheadline)
                     }
                 }
                 .settingsCard()
@@ -55,14 +58,14 @@ struct AboutView: View {
             Image(nsImage: AppInfo.appIcon)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 58, height: 58)
+                .frame(width: 48, height: 48)
 
-            VStack(alignment: .leading, spacing: 5) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(AppInfo.displayName)
-                    .font(.title2.weight(.semibold))
+                    .font(.headline.weight(.semibold))
 
                 L.text("ui.settings.about_subtitle", using: lm)
-                    .font(.subheadline)
+                    .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -70,6 +73,19 @@ struct AboutView: View {
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .settingsCard()
+    }
+}
+
+private struct AboutRowTitle: View {
+    let title: String
+
+    init(_ title: String) {
+        self.title = title
+    }
+
+    var body: some View {
+        Text(title)
+            .font(.subheadline.weight(.medium))
     }
 }
 

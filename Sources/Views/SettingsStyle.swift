@@ -69,32 +69,71 @@ struct FieldLabel: View {
     }
 }
 
+struct SettingsSelect<Value: Hashable, Options: View>: View {
+    let title: String
+    @Binding var selection: Value
+    let options: Options
+
+    init(
+        _ title: String,
+        selection: Binding<Value>,
+        @ViewBuilder options: () -> Options
+    ) {
+        self.title = title
+        self._selection = selection
+        self.options = options()
+    }
+
+    var body: some View {
+        Picker("", selection: $selection) {
+            options
+        }
+        .pickerStyle(.menu)
+        .labelsHidden()
+        .controlSize(.small)
+        .font(.subheadline.weight(.medium))
+        .frame(minWidth: 0, alignment: .trailing)
+        .accessibilityLabel(title)
+    }
+}
+
 private struct SettingsCardModifier: ViewModifier {
     let title: String?
+    let subtitle: String?
 
     func body(content: Content) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 7) {
             if let title {
-                Text(title)
-                    .font(.subheadline.weight(.semibold))
-                    .padding(.horizontal, 12)
-                    .padding(.top, 11)
-                    .padding(.bottom, 5)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(.primary)
+
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+                }
+                .padding(.horizontal, 10)
             }
 
             content
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(.quaternary.opacity(0.34), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        .stroke(Color(nsColor: .separatorColor).opacity(0.08), lineWidth: 1)
+                }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.quaternary.opacity(0.34), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(Color(nsColor: .separatorColor).opacity(0.08), lineWidth: 1)
-        }
     }
 }
 
 extension View {
-    func settingsCard(_ title: String? = nil) -> some View {
-        modifier(SettingsCardModifier(title: title))
+    func settingsCard(_ title: String? = nil, subtitle: String? = nil) -> some View {
+        modifier(SettingsCardModifier(title: title, subtitle: subtitle))
     }
 }

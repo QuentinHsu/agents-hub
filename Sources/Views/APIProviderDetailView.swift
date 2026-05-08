@@ -116,16 +116,15 @@ struct APIProviderDetailView: View {
                 .frame(width: FormConstants.fieldWidth, alignment: .leading)
             }
         }
-        .settingsCard()
+        .settingsCard(apiProvider.name)
     }
 
     private func keysCard(for apiProvider: APIProvider) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             SettingsRow {
-                FieldLabel(
-                    L.string("ui.api_provider.keys", using: lm),
-                    detail: L.string("ui.api_provider.keys_detail", using: lm)
-                )
+                Text(L.string("ui.api_provider.keys_detail", using: lm))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             } trailing: {
                 Button {
                     commitDraftProvider()
@@ -143,7 +142,7 @@ struct APIProviderDetailView: View {
                 keyEditor(key, in: apiProvider)
             }
         }
-        .settingsCard()
+        .settingsCard(L.string("ui.api_provider.keys", using: lm))
     }
 
     private func keyEditor(_ key: APIProviderKey, in apiProvider: APIProvider) -> some View {
