@@ -52,6 +52,9 @@
 "ui.profile.profile_name_detail" = "Only used inside Agents Hub";
 "ui.profile.name_placeholder" = "Name";
 "ui.profile.base_url" = "Base URL";
+"ui.profile.provider_website" = "Provider Website";
+"ui.profile.provider_website_detail" = "Optional link opened from this profile";
+"ui.profile.provider_website_placeholder" = "https://example.com";
 "ui.profile.api_key" = "API Key";
 "ui.profile.api_key_detail" = "Stored in Agents Hub profiles and written to CLI config";
 "ui.profile.model" = "Model";
@@ -73,6 +76,7 @@
 "ui.profile.model_detail_codex" = "Default model requested by the CLI";
 "ui.hint.hide_api_key" = "Hide API key";
 "ui.hint.show_api_key" = "Show API key";
+"ui.hint.open_provider_website" = "Open provider website";
 
 /* Status */
 "status.not_checked" = "Not checked";

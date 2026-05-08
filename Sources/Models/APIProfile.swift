@@ -5,6 +5,7 @@ struct APIProfile: Identifiable, Hashable, Codable, Sendable {
     var provider: ProviderKind
     var name: String
     var baseURL: String
+    var providerWebsiteURL: String
     var apiKey: String
     var model: String
     var codexProviderNameMode: CodexProviderNameMode
@@ -17,6 +18,7 @@ struct APIProfile: Identifiable, Hashable, Codable, Sendable {
         provider: ProviderKind,
         name: String,
         baseURL: String? = nil,
+        providerWebsiteURL: String = "",
         apiKey: String = "",
         model: String? = nil,
         codexProviderNameMode: CodexProviderNameMode = .agentsHub,
@@ -28,6 +30,7 @@ struct APIProfile: Identifiable, Hashable, Codable, Sendable {
         self.provider = provider
         self.name = name
         self.baseURL = baseURL ?? provider.defaultBaseURL
+        self.providerWebsiteURL = providerWebsiteURL
         self.apiKey = apiKey
         self.model = model ?? provider.defaultModel
         self.codexProviderNameMode = codexProviderNameMode
@@ -41,6 +44,7 @@ struct APIProfile: Identifiable, Hashable, Codable, Sendable {
         case provider
         case name
         case baseURL
+        case providerWebsiteURL
         case apiKey
         case model
         case codexProviderNameMode
@@ -55,6 +59,7 @@ struct APIProfile: Identifiable, Hashable, Codable, Sendable {
         id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
         name = try container.decodeIfPresent(String.self, forKey: .name) ?? provider.displayName
         baseURL = try container.decodeIfPresent(String.self, forKey: .baseURL) ?? provider.defaultBaseURL
+        providerWebsiteURL = try container.decodeIfPresent(String.self, forKey: .providerWebsiteURL) ?? ""
         apiKey = try container.decodeIfPresent(String.self, forKey: .apiKey) ?? ""
         model = try container.decodeIfPresent(String.self, forKey: .model) ?? provider.defaultModel
         codexProviderNameMode = try container.decodeIfPresent(

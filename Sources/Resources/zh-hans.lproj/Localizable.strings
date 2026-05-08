@@ -52,6 +52,9 @@
 "ui.profile.profile_name_detail" = "仅在 Agents Hub 中使用";
 "ui.profile.name_placeholder" = "名称";
 "ui.profile.base_url" = "Base URL";
+"ui.profile.provider_website" = "供应商官网";
+"ui.profile.provider_website_detail" = "可从此配置一键打开";
+"ui.profile.provider_website_placeholder" = "https://example.com";
 "ui.profile.api_key" = "API Key";
 "ui.profile.api_key_detail" = "存储在 Agents Hub 配置中，并写入 CLI 配置";
 "ui.profile.model" = "模型";
@@ -73,6 +76,7 @@
 "ui.profile.model_detail_codex" = "CLI 默认请求的模型";
 "ui.hint.hide_api_key" = "隐藏 API key";
 "ui.hint.show_api_key" = "显示 API key";
+"ui.hint.open_provider_website" = "打开供应商官网";
 
 /* Status */
 "status.not_checked" = "未检查";

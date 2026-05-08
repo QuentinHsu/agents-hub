@@ -68,6 +68,34 @@ struct ProfileDetailView: View {
 
             SettingsRow {
                 FieldLabel(
+                    L.string("ui.profile.provider_website", using: lm),
+                    detail: L.string("ui.profile.provider_website_detail", using: lm)
+                )
+            } trailing: {
+                HStack(spacing: 8) {
+                    TextField(
+                        L.string("ui.profile.provider_website_placeholder", using: lm),
+                        text: binding(for: \.providerWebsiteURL)
+                    )
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: apiKeyFieldWidth)
+
+                    Button {
+                        openProviderWebsite()
+                    } label: {
+                        Image(systemName: "safari")
+                    }
+                    .buttonStyle(.borderless)
+                    .disabled(providerWebsiteURL(for: profile) == nil)
+                    .help(L.string("ui.hint.open_provider_website", using: lm))
+                }
+                .frame(width: formFieldWidth, alignment: .leading)
+            }
+
+            SettingsDivider()
+
+            SettingsRow {
+                FieldLabel(
                     L.string("ui.profile.api_key", using: lm),
                     detail: L.string("ui.profile.api_key_detail", using: lm)
                 )
@@ -222,6 +250,28 @@ struct ProfileDetailView: View {
         case .profileName:
             L.string("ui.profile.codex_provider_name_profile", using: lm)
         }
+    }
+
+    private func openProviderWebsite() {
+        guard let profile,
+              let url = providerWebsiteURL(for: profile)
+        else { return }
+
+        NSWorkspace.shared.open(url)
+    }
+
+    private func providerWebsiteURL(for profile: APIProfile) -> URL? {
+        let trimmed = profile.providerWebsiteURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        let candidate = trimmed.contains("://") ? trimmed : "https://\(trimmed)"
+        guard let url = URL(string: candidate),
+              let scheme = url.scheme?.lowercased(),
+              ["http", "https"].contains(scheme),
+              url.host?.isEmpty == false
+        else { return nil }
+
+        return url
     }
 
     private func selectRoutedProfile() {
