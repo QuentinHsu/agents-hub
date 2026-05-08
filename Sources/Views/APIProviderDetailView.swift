@@ -3,9 +3,6 @@ import SwiftUI
 struct APIProviderDetailView: View {
     @Environment(LocalizationManager.self) private var lm
 
-    private let formFieldWidth: CGFloat = 330
-    private let apiKeyFieldWidth: CGFloat = 286
-
     @Bindable var manager: ProfileManager
     var apiProviderID: UUID?
     @State private var revealKeyIDs: Set<UUID> = []
@@ -72,7 +69,7 @@ struct APIProviderDetailView: View {
             } trailing: {
                 TextField(L.string("ui.api_provider.name_placeholder", using: lm), text: binding(for: \.name))
                     .textFieldStyle(.roundedBorder)
-                    .frame(width: formFieldWidth)
+                    .frame(width: FormConstants.fieldWidth)
                     .focused($focusedField, equals: .providerName)
             }
 
@@ -86,7 +83,7 @@ struct APIProviderDetailView: View {
             } trailing: {
                 TextField(L.string("ui.profile.base_url", using: lm), text: binding(for: \.baseURL))
                     .textFieldStyle(.roundedBorder)
-                    .frame(width: formFieldWidth)
+                    .frame(width: FormConstants.fieldWidth)
                     .focused($focusedField, equals: .baseURL)
             }
 
@@ -104,7 +101,7 @@ struct APIProviderDetailView: View {
                         text: binding(for: \.providerWebsiteURL)
                     )
                     .textFieldStyle(.roundedBorder)
-                    .frame(width: apiKeyFieldWidth)
+                    .frame(width: FormConstants.apiKeyFieldWidth)
                     .focused($focusedField, equals: .providerWebsiteURL)
 
                     Button {
@@ -116,7 +113,7 @@ struct APIProviderDetailView: View {
                     .disabled(providerWebsiteURL(for: apiProvider) == nil)
                     .help(L.string("ui.hint.open_provider_website", using: lm))
                 }
-                .frame(width: formFieldWidth, alignment: .leading)
+                .frame(width: FormConstants.fieldWidth, alignment: .leading)
             }
         }
         .settingsCard()
@@ -163,7 +160,7 @@ struct APIProviderDetailView: View {
                         text: keyBinding(keyID: key.id, for: \.name)
                     )
                     .textFieldStyle(.roundedBorder)
-                    .frame(width: apiKeyFieldWidth)
+                    .frame(width: FormConstants.apiKeyFieldWidth)
                     .focused($focusedField, equals: .keyName(key.id))
 
                     Button {
@@ -177,7 +174,7 @@ struct APIProviderDetailView: View {
                     .disabled(apiProvider.keys.count <= 1)
                     .help(L.string("ui.hint.delete_api_provider_key", using: lm))
                 }
-                .frame(width: formFieldWidth, alignment: .leading)
+                .frame(width: FormConstants.fieldWidth, alignment: .leading)
             }
 
             SettingsDivider()
@@ -199,7 +196,7 @@ struct APIProviderDetailView: View {
                         }
                     }
                     .textFieldStyle(.roundedBorder)
-                    .frame(width: apiKeyFieldWidth)
+                    .frame(width: FormConstants.apiKeyFieldWidth)
 
                     Button {
                         toggleReveal(for: key.id)
@@ -209,7 +206,7 @@ struct APIProviderDetailView: View {
                     .buttonStyle(.borderless)
                     .help(revealKeyIDs.contains(key.id) ? L.string("ui.hint.hide_api_key", using: lm) : L.string("ui.hint.show_api_key", using: lm))
                 }
-                .frame(width: formFieldWidth, alignment: .leading)
+                .frame(width: FormConstants.fieldWidth, alignment: .leading)
             }
         }
     }
@@ -248,8 +245,7 @@ struct APIProviderDetailView: View {
     }
 
     private func providerWebsiteURL(for apiProvider: APIProvider) -> URL? {
-        let trimmed = apiProvider.providerWebsiteURL.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return nil }
+        guard let trimmed = apiProvider.providerWebsiteURL.nilIfBlank else { return nil }
 
         let candidate = trimmed.contains("://") ? trimmed : "https://\(trimmed)"
         guard let url = URL(string: candidate),
@@ -305,24 +301,4 @@ private enum APIProviderField: Hashable {
     case providerWebsiteURL
     case keyName(UUID)
     case apiKey(UUID)
-}
-
-private struct FieldLabel: View {
-    let title: String
-    let detail: String
-
-    init(_ title: String, detail: String) {
-        self.title = title
-        self.detail = detail
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title)
-                .font(.subheadline.weight(.medium))
-            Text(detail)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-    }
 }

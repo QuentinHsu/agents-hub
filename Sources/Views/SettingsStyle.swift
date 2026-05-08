@@ -1,6 +1,15 @@
 import AppKit
 import SwiftUI
 
+// MARK: - Form Constants
+
+enum FormConstants {
+    static let fieldWidth: CGFloat = 330
+    static let apiKeyFieldWidth: CGFloat = 286
+}
+
+// MARK: - Settings Components
+
 struct SettingsRow<Leading: View, Trailing: View>: View {
     private let leading: Leading
     private let trailing: Trailing
@@ -35,6 +44,28 @@ struct SettingsDivider: View {
             .fill(Color(nsColor: .separatorColor).opacity(0.18))
             .frame(height: 1 / max(NSScreen.main?.backingScaleFactor ?? 2, 1))
             .padding(.leading, 12)
+    }
+}
+
+struct FieldLabel: View {
+    let title: String
+    let detail: String
+
+    init(_ title: String, detail: String = "") {
+        self.title = title
+        self.detail = detail
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.subheadline.weight(.medium))
+            if !detail.isEmpty {
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
     }
 }
 

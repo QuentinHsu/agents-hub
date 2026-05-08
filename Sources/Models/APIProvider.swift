@@ -25,7 +25,7 @@ struct APIProvider: Identifiable, Hashable, Codable, Sendable {
     }
 
     var redactedKey: String {
-        keys.first?.redactedKey ?? LocalizationManager.localize("ui.label.no_key")
+        keys.first?.redactedKey ?? LocalizationManager.localize(LocalizationKeys.noKey)
     }
 
     var isReady: Bool {
@@ -49,7 +49,7 @@ struct APIProviderKey: Identifiable, Hashable, Codable, Sendable {
     }
 
     var redactedKey: String {
-        apiKey.redacted(emptyPlaceholder: LocalizationManager.localize("ui.label.no_key"))
+        apiKey.redacted(emptyPlaceholder: LocalizationManager.localize(LocalizationKeys.noKey))
     }
 
     var isReady: Bool {

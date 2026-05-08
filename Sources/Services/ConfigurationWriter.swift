@@ -27,14 +27,14 @@ struct ConfigurationWriter: Sendable {
         settings["env"] = mergedEnv(
             existing: settings["env"] as? [String: Any],
             values: [
-                "ANTHROPIC_AUTH_TOKEN": configuration.apiKey,
-                "ANTHROPIC_BASE_URL": configuration.baseURL,
-                "ANTHROPIC_MODEL": configuration.model,
-                "ANTHROPIC_DEFAULT_OPUS_MODEL": configuration.claudeCodeModels.defaultOpusModel,
-                "ANTHROPIC_DEFAULT_SONNET_MODEL": configuration.claudeCodeModels.defaultSonnetModel,
-                "ANTHROPIC_DEFAULT_HAIKU_MODEL": configuration.claudeCodeModels.defaultHaikuModel
+                EnvironmentVariables.anthropicAuthToken: configuration.apiKey,
+                EnvironmentVariables.anthropicBaseURL: configuration.baseURL,
+                EnvironmentVariables.anthropicModel: configuration.model,
+                EnvironmentVariables.anthropicDefaultOpusModel: configuration.claudeCodeModels.defaultOpusModel,
+                EnvironmentVariables.anthropicDefaultSonnetModel: configuration.claudeCodeModels.defaultSonnetModel,
+                EnvironmentVariables.anthropicDefaultHaikuModel: configuration.claudeCodeModels.defaultHaikuModel
             ],
-            removing: ["ANTHROPIC_API_KEY"]
+            removing: [EnvironmentVariables.anthropicAPIKey]
         )
 
         try writeJSONDictionary(settings, to: AppPaths.claudeSettingsURL)
@@ -68,7 +68,7 @@ struct ConfigurationWriter: Sendable {
         } catch {
             payload = [:]
         }
-        payload["OPENAI_API_KEY"] = configuration.apiKey.nilIfBlank
+        payload[EnvironmentVariables.openAIAPIKey] = configuration.apiKey.nilIfBlank
 
         try writeJSONDictionary(payload, to: AppPaths.codexAuthURL)
     }
@@ -160,26 +160,11 @@ struct ConfigurationWriter: Sendable {
     }
 
     private func mergedCodexConfig(existing: String, configuration: AgentConfiguration) -> String {
-        var lines = existing.isEmpty ? [] : existing.components(separatedBy: "\n")
-        if !lines.isEmpty && existing.hasSuffix("\n") {
-            lines.removeLast()
-        }
-
+        var lines = parseLines(from: existing)
         lines = removingCodexProviderBlock(from: lines)
-        lines = settingTopLevelCodexValue(
-            "model",
-            to: configuration.model,
-            in: lines
-        )
-        lines = settingTopLevelCodexValue(
-            "model_provider",
-            to: codexModelProviderID,
-            in: lines
-        )
-
-        while lines.last?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == true {
-            lines.removeLast()
-        }
+        lines = settingTopLevelCodexValue("model", to: configuration.model, in: lines)
+        lines = settingTopLevelCodexValue("model_provider", to: codexModelProviderID, in: lines)
+        lines = trimTrailingEmptyLines(lines)
 
         if !lines.isEmpty {
             lines.append("")
@@ -187,6 +172,23 @@ struct ConfigurationWriter: Sendable {
         lines.append(contentsOf: codexProviderBlock(for: configuration))
 
         return lines.joined(separator: "\n") + "\n"
+    }
+
+    private func parseLines(from text: String) -> [String] {
+        guard !text.isEmpty else { return [] }
+        var lines = text.components(separatedBy: "\n")
+        if text.hasSuffix("\n") {
+            lines.removeLast()
+        }
+        return lines
+    }
+
+    private func trimTrailingEmptyLines(_ lines: [String]) -> [String] {
+        var result = lines
+        while result.last?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == true {
+            result.removeLast()
+        }
+        return result
     }
 
     private func removingCodexProviderBlock(from lines: [String]) -> [String] {
@@ -209,13 +211,14 @@ struct ConfigurationWriter: Sendable {
     }
 
     private func settingTopLevelCodexValue(_ key: String, to value: String, in lines: [String]) -> [String] {
-        let assignment = "\(key) = \"\(tomlEscape(value))\""
+        let assignment = tomlAssignment(key: key, value: value)
         var result: [String] = []
         var hasSetValue = false
         var isInTable = false
 
         for line in lines {
             let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+
             if isTableHeader(trimmed) {
                 if !hasSetValue {
                     result.append(assignment)
@@ -242,6 +245,10 @@ struct ConfigurationWriter: Sendable {
         }
 
         return result
+    }
+
+    private func tomlAssignment(key: String, value: String) -> String {
+        "\(key) = \"\(tomlEscape(value))\""
     }
 
     private func codexProviderBlock(for configuration: AgentConfiguration) -> [String] {

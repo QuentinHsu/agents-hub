@@ -3,8 +3,6 @@ import SwiftUI
 struct ProfileDetailView: View {
     @Environment(LocalizationManager.self) private var lm
 
-    private let formFieldWidth: CGFloat = 330
-
     @Bindable var manager: ProfileManager
     var profileID: UUID?
     @State private var draftProfile: APIProfile?
@@ -62,7 +60,7 @@ struct ProfileDetailView: View {
             } trailing: {
                 TextField(L.string("ui.profile.name_placeholder", using: lm), text: binding(for: \.name))
                     .textFieldStyle(.roundedBorder)
-                    .frame(width: formFieldWidth)
+                    .frame(width: FormConstants.fieldWidth)
                     .focused($focusedField, equals: .name)
             }
 
@@ -80,7 +78,7 @@ struct ProfileDetailView: View {
                     }
                 }
                 .labelsHidden()
-                .frame(width: formFieldWidth, alignment: .leading)
+                .frame(width: FormConstants.fieldWidth, alignment: .leading)
             }
 
             SettingsDivider()
@@ -100,7 +98,7 @@ struct ProfileDetailView: View {
             } trailing: {
                 TextField(L.string("ui.profile.model", using: lm), text: binding(for: \.model))
                     .textFieldStyle(.roundedBorder)
-                    .frame(width: formFieldWidth)
+                    .frame(width: FormConstants.fieldWidth)
                     .focused($focusedField, equals: .model)
             }
 
@@ -140,7 +138,7 @@ struct ProfileDetailView: View {
                     .lineLimit(1)
                     .truncationMode(.middle)
             }
-            .frame(width: formFieldWidth, alignment: .trailing)
+            .frame(width: FormConstants.fieldWidth, alignment: .trailing)
         }
     }
 
@@ -157,7 +155,7 @@ struct ProfileDetailView: View {
                 }
             }
             .labelsHidden()
-            .frame(width: formFieldWidth, alignment: .leading)
+            .frame(width: FormConstants.fieldWidth, alignment: .leading)
         }
     }
 
@@ -178,7 +176,7 @@ struct ProfileDetailView: View {
             }
             .labelsHidden()
             .pickerStyle(.segmented)
-            .frame(width: formFieldWidth, alignment: .leading)
+            .frame(width: FormConstants.fieldWidth, alignment: .leading)
         }
     }
 
@@ -189,7 +187,7 @@ struct ProfileDetailView: View {
             } trailing: {
                 TextField("opus", text: claudeModelBinding(for: \.defaultOpusModel))
                     .textFieldStyle(.roundedBorder)
-                    .frame(width: formFieldWidth)
+                    .frame(width: FormConstants.fieldWidth)
                     .focused($focusedField, equals: .defaultOpusModel)
             }
 
@@ -200,7 +198,7 @@ struct ProfileDetailView: View {
             } trailing: {
                 TextField("sonnet", text: claudeModelBinding(for: \.defaultSonnetModel))
                     .textFieldStyle(.roundedBorder)
-                    .frame(width: formFieldWidth)
+                    .frame(width: FormConstants.fieldWidth)
                     .focused($focusedField, equals: .defaultSonnetModel)
             }
 
@@ -211,7 +209,7 @@ struct ProfileDetailView: View {
             } trailing: {
                 TextField("haiku", text: claudeModelBinding(for: \.defaultHaikuModel))
                     .textFieldStyle(.roundedBorder)
-                    .frame(width: formFieldWidth)
+                    .frame(width: FormConstants.fieldWidth)
                     .focused($focusedField, equals: .defaultHaikuModel)
             }
         }
@@ -336,24 +334,4 @@ private enum ProfileField: Hashable {
     case defaultOpusModel
     case defaultSonnetModel
     case defaultHaikuModel
-}
-
-private struct FieldLabel: View {
-    let title: String
-    let detail: String
-
-    init(_ title: String, detail: String) {
-        self.title = title
-        self.detail = detail
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title)
-                .font(.subheadline.weight(.medium))
-            Text(detail)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-    }
 }

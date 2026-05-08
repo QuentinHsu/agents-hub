@@ -88,7 +88,7 @@ struct APIProfile: Identifiable, Hashable, Codable, Sendable {
     }
 
     var redactedKey: String {
-        apiKey.redacted(emptyPlaceholder: LocalizationManager.localize("ui.label.no_key"))
+        apiKey.redacted(emptyPlaceholder: LocalizationManager.localize(LocalizationKeys.noKey))
     }
 
     var isReady: Bool {
@@ -157,9 +157,9 @@ struct ClaudeCodeModelConfiguration: Hashable, Codable, Sendable {
     var defaultHaikuModel: String
 
     init(
-        defaultOpusModel: String = "opus",
-        defaultSonnetModel: String = "sonnet",
-        defaultHaikuModel: String = "haiku"
+        defaultOpusModel: String = ClaudeModels.opus,
+        defaultSonnetModel: String = ClaudeModels.sonnet,
+        defaultHaikuModel: String = ClaudeModels.haiku
     ) {
         self.defaultOpusModel = defaultOpusModel
         self.defaultSonnetModel = defaultSonnetModel

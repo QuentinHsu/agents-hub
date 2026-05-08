@@ -62,8 +62,7 @@ struct LocalToolVersion: Equatable {
 
 enum AgentDiagnostics {
     static func checkEndpoint(for profile: APIProfile) async -> AgentEndpointStatus {
-        let baseURL = profile.baseURL.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !baseURL.isEmpty, !profile.apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+        guard let baseURL = profile.baseURL.nilIfBlank, profile.apiKey.nilIfBlank != nil else {
             return AgentEndpointStatus(state: .notConfigured)
         }
 
@@ -207,8 +206,7 @@ enum AgentDiagnostics {
             try process.run()
             process.waitUntilExit()
             let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            let output = String(data: data, encoding: .utf8)?
-                .trimmingCharacters(in: .whitespacesAndNewlines)
+            let output = String(data: data, encoding: .utf8)?.nilIfBlank
             let firstLine = output?.components(separatedBy: .newlines).first
             return LocalToolVersion(
                 name: name,
@@ -249,9 +247,7 @@ enum AgentDiagnostics {
             process.waitUntilExit()
             guard process.terminationStatus == 0 else { return nil }
             let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            let path = String(data: data, encoding: .utf8)?
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            guard let path, !path.isEmpty else { return nil }
+            guard let path = String(data: data, encoding: .utf8)?.nilIfBlank else { return nil }
             return URL(filePath: path)
         } catch {
             return nil

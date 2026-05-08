@@ -83,8 +83,8 @@ private struct AgentSidebarRow: View {
 
                 if let activeProfile {
                     HStack(spacing: 4) {
-                        Image(systemName: "checkmark.seal.fill")
-                            .font(.caption2)
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.caption.weight(.medium))
                             .foregroundStyle(.green)
 
                         Text(activeProfile.name)

@@ -9,29 +9,29 @@ enum ProviderKind: String, CaseIterable, Codable, Identifiable, Sendable {
 
     var displayName: String {
         switch self {
-        case .claudeCode: "Claude Code"
-        case .codex: "Codex"
+        case .claudeCode: ProviderDefaults.ClaudeCode.displayName
+        case .codex: ProviderDefaults.Codex.displayName
         }
     }
 
     var shortName: String {
         switch self {
-        case .claudeCode: "Claude"
-        case .codex: "Codex"
+        case .claudeCode: ProviderDefaults.ClaudeCode.shortName
+        case .codex: ProviderDefaults.Codex.shortName
         }
     }
 
     var symbolName: String {
         switch self {
-        case .claudeCode: "brain.head.profile"
-        case .codex: "terminal.fill"
+        case .claudeCode: ProviderDefaults.ClaudeCode.symbolName
+        case .codex: ProviderDefaults.Codex.symbolName
         }
     }
 
     var logoName: String {
         switch self {
-        case .claudeCode: "claude"
-        case .codex: "codex"
+        case .claudeCode: ProviderDefaults.ClaudeCode.logoName
+        case .codex: ProviderDefaults.Codex.logoName
         }
     }
 
@@ -44,15 +44,15 @@ enum ProviderKind: String, CaseIterable, Codable, Identifiable, Sendable {
 
     var defaultBaseURL: String {
         switch self {
-        case .claudeCode: "https://api.anthropic.com"
-        case .codex: "https://api.openai.com/v1"
+        case .claudeCode: ProviderDefaults.ClaudeCode.baseURL
+        case .codex: ProviderDefaults.Codex.baseURL
         }
     }
 
     var defaultModel: String {
         switch self {
-        case .claudeCode: "sonnet"
-        case .codex: "gpt-5.1-codex"
+        case .claudeCode: ProviderDefaults.ClaudeCode.defaultModel
+        case .codex: ProviderDefaults.Codex.defaultModel
         }
     }
 }

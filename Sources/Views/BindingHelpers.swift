@@ -1,0 +1,39 @@
+import SwiftUI
+
+struct DraftBinding<Draft, Value>: @unchecked Sendable {
+    let draft: Binding<Draft?>
+    let getValue: @Sendable (Draft?) -> Value
+    let setValue: @Sendable (inout Draft, Value) -> Void
+    let ensureDraft: @Sendable () -> Void
+    let commitDraft: @Sendable () -> Void
+
+    func binding() -> Binding<Value> {
+        Binding {
+            getValue(draft.wrappedValue)
+        } set: { newValue in
+            ensureDraft()
+            guard var currentDraft = draft.wrappedValue else { return }
+            setValue(&currentDraft, newValue)
+            draft.wrappedValue = currentDraft
+            commitDraft()
+        }
+    }
+}
+
+struct DeferredDraftBinding<Draft, Value>: @unchecked Sendable {
+    let draft: Binding<Draft?>
+    let getValue: @Sendable (Draft?) -> Value
+    let setValue: @Sendable (inout Draft, Value) -> Void
+    let ensureDraft: @Sendable () -> Void
+
+    func binding() -> Binding<Value> {
+        Binding {
+            getValue(draft.wrappedValue)
+        } set: { newValue in
+            ensureDraft()
+            guard var currentDraft = draft.wrappedValue else { return }
+            setValue(&currentDraft, newValue)
+            draft.wrappedValue = currentDraft
+        }
+    }
+}
