@@ -9,6 +9,8 @@ struct ProfileDetailView: View {
     @Bindable var manager: ProfileManager
     var profileID: UUID?
     @State private var revealKey = false
+    @State private var draftProfile: APIProfile?
+    @FocusState private var focusedField: ProfileField?
 
     private var profile: APIProfile? {
         if let profileID {
@@ -35,9 +37,20 @@ struct ProfileDetailView: View {
         }
         .onAppear {
             selectRoutedProfile()
+            syncDraftProfile()
         }
         .onChange(of: profileID) {
+            commitDraftProfile()
             selectRoutedProfile()
+            syncDraftProfile()
+        }
+        .onChange(of: focusedField) { oldValue, newValue in
+            if oldValue != nil && oldValue != newValue {
+                commitDraftProfile()
+            }
+        }
+        .onDisappear {
+            commitDraftProfile()
         }
     }
 
@@ -52,6 +65,7 @@ struct ProfileDetailView: View {
                 TextField(L.string("ui.profile.name_placeholder", using: lm), text: binding(for: \.name))
                     .textFieldStyle(.roundedBorder)
                     .frame(width: formFieldWidth)
+                    .focused($focusedField, equals: .name)
             }
 
             SettingsDivider()
@@ -62,6 +76,7 @@ struct ProfileDetailView: View {
                 TextField(L.string("ui.profile.base_url", using: lm), text: binding(for: \.baseURL))
                     .textFieldStyle(.roundedBorder)
                     .frame(width: formFieldWidth)
+                    .focused($focusedField, equals: .baseURL)
             }
 
             SettingsDivider()
@@ -79,6 +94,7 @@ struct ProfileDetailView: View {
                     )
                     .textFieldStyle(.roundedBorder)
                     .frame(width: apiKeyFieldWidth)
+                    .focused($focusedField, equals: .providerWebsiteURL)
 
                     Button {
                         openProviderWebsite()
@@ -104,8 +120,10 @@ struct ProfileDetailView: View {
                     Group {
                         if revealKey {
                             TextField(L.string("ui.profile.api_key", using: lm), text: binding(for: \.apiKey))
+                                .focused($focusedField, equals: .apiKey)
                         } else {
                             SecureField(L.string("ui.profile.api_key", using: lm), text: binding(for: \.apiKey))
+                                .focused($focusedField, equals: .apiKey)
                         }
                     }
                     .textFieldStyle(.roundedBorder)
@@ -130,6 +148,7 @@ struct ProfileDetailView: View {
                 TextField(L.string("ui.profile.model", using: lm), text: binding(for: \.model))
                     .textFieldStyle(.roundedBorder)
                     .frame(width: formFieldWidth)
+                    .focused($focusedField, equals: .model)
             }
 
             if profile.provider == .codex {
@@ -174,6 +193,7 @@ struct ProfileDetailView: View {
                 TextField("opus", text: claudeModelBinding(for: \.defaultOpusModel))
                     .textFieldStyle(.roundedBorder)
                     .frame(width: formFieldWidth)
+                    .focused($focusedField, equals: .defaultOpusModel)
             }
 
             SettingsDivider()
@@ -184,6 +204,7 @@ struct ProfileDetailView: View {
                 TextField("sonnet", text: claudeModelBinding(for: \.defaultSonnetModel))
                     .textFieldStyle(.roundedBorder)
                     .frame(width: formFieldWidth)
+                    .focused($focusedField, equals: .defaultSonnetModel)
             }
 
             SettingsDivider()
@@ -194,17 +215,17 @@ struct ProfileDetailView: View {
                 TextField("haiku", text: claudeModelBinding(for: \.defaultHaikuModel))
                     .textFieldStyle(.roundedBorder)
                     .frame(width: formFieldWidth)
+                    .focused($focusedField, equals: .defaultHaikuModel)
             }
         }
     }
 
     private func binding(for keyPath: WritableKeyPath<APIProfile, String>) -> Binding<String> {
         Binding {
-            profile?[keyPath: keyPath] ?? ""
+            draftProfile?[keyPath: keyPath] ?? profile?[keyPath: keyPath] ?? ""
         } set: { newValue in
-            manager.updateSelectedProfile { profile in
-                profile[keyPath: keyPath] = newValue
-            }
+            ensureDraftProfile()
+            draftProfile?[keyPath: keyPath] = newValue
         }
     }
 
@@ -212,21 +233,20 @@ struct ProfileDetailView: View {
         for keyPath: WritableKeyPath<ClaudeCodeModelConfiguration, String>
     ) -> Binding<String> {
         Binding {
-            profile?.claudeCodeModels[keyPath: keyPath] ?? ""
+            draftProfile?.claudeCodeModels[keyPath: keyPath] ?? profile?.claudeCodeModels[keyPath: keyPath] ?? ""
         } set: { newValue in
-            manager.updateSelectedProfile { profile in
-                profile.claudeCodeModels[keyPath: keyPath] = newValue
-            }
+            ensureDraftProfile()
+            draftProfile?.claudeCodeModels[keyPath: keyPath] = newValue
         }
     }
 
     private func codexProviderNameModeBinding() -> Binding<CodexProviderNameMode> {
         Binding {
-            profile?.codexProviderNameMode ?? .agentsHub
+            draftProfile?.codexProviderNameMode ?? profile?.codexProviderNameMode ?? .agentsHub
         } set: { newValue in
-            manager.updateSelectedProfile { profile in
-                profile.codexProviderNameMode = newValue
-            }
+            ensureDraftProfile()
+            draftProfile?.codexProviderNameMode = newValue
+            commitDraftProfile()
         }
     }
 
@@ -281,6 +301,41 @@ struct ProfileDetailView: View {
 
         manager.selectProfile(profile)
     }
+
+    private func ensureDraftProfile() {
+        guard draftProfile == nil else { return }
+        syncDraftProfile()
+    }
+
+    private func syncDraftProfile() {
+        draftProfile = profile
+    }
+
+    private func commitDraftProfile() {
+        guard let draftProfile else { return }
+
+        manager.updateProfile(id: draftProfile.id) { profile in
+            profile.name = draftProfile.name
+            profile.baseURL = draftProfile.baseURL
+            profile.providerWebsiteURL = draftProfile.providerWebsiteURL
+            profile.apiKey = draftProfile.apiKey
+            profile.model = draftProfile.model
+            profile.codexProviderNameMode = draftProfile.codexProviderNameMode
+            profile.claudeCodeModels = draftProfile.claudeCodeModels
+        }
+        syncDraftProfile()
+    }
+}
+
+private enum ProfileField: Hashable {
+    case name
+    case baseURL
+    case providerWebsiteURL
+    case apiKey
+    case model
+    case defaultOpusModel
+    case defaultSonnetModel
+    case defaultHaikuModel
 }
 
 private struct FieldLabel: View {

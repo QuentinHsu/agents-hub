@@ -53,7 +53,7 @@
 "ui.profile.name_placeholder" = "名称";
 "ui.profile.base_url" = "Base URL";
 "ui.profile.provider_website" = "供应商官网";
-"ui.profile.provider_website_detail" = "可从此配置一键打开";
+"ui.profile.provider_website_detail" = "此供应商的官方网站";
 "ui.profile.provider_website_placeholder" = "https://example.com";
 "ui.profile.api_key" = "API Key";
 "ui.profile.api_key_detail" = "存储在 Agents Hub 配置中，并写入 CLI 配置";

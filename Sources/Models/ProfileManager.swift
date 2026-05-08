@@ -78,15 +78,21 @@ final class ProfileManager {
         guard let selectedID = selectedProfileIDs[selectedProvider],
               let index = profiles.firstIndex(where: { $0.id == selectedID })
         else { return }
-        update(&profiles[index])
-        profiles[index].updatedAt = .now
-        if profiles[index].isActive {
+
+        var updatedProfile = profiles[index]
+        update(&updatedProfile)
+        guard updatedProfile != profiles[index] else { return }
+
+        updatedProfile.updatedAt = .now
+        profiles[index] = updatedProfile
+
+        if updatedProfile.isActive {
             do {
-                try writer.apply(profiles[index])
+                try writer.apply(updatedProfile)
                 statusMessage = String(
                     format: LocalizationManager.localize("status.profile_saved_and_applied"),
-                    profiles[index].name,
-                    profiles[index].provider.displayName
+                    updatedProfile.name,
+                    updatedProfile.provider.displayName
                 )
                 errorMessage = nil
             } catch {
@@ -95,11 +101,19 @@ final class ProfileManager {
         } else {
             statusMessage = String(
                 format: LocalizationManager.localize("status.profile_saved"),
-                profiles[index].name
+                updatedProfile.name
             )
             errorMessage = nil
         }
         save()
+    }
+
+    func updateProfile(id: UUID, _ update: (inout APIProfile) -> Void) {
+        guard let index = profiles.firstIndex(where: { $0.id == id }) else { return }
+
+        selectedProvider = profiles[index].provider
+        selectedProfileIDs[profiles[index].provider] = id
+        updateSelectedProfile(update)
     }
 
     func addProfile(for provider: ProviderKind? = nil) {
