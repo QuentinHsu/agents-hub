@@ -15,6 +15,19 @@ struct APIProvidersView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .navigationTitle(L.string("ui.api_providers.title", using: lm))
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    manager.addAPIProvider()
+                    if let apiProviderID = manager.selectedAPIProviderID {
+                        path.append(.apiProvider(apiProviderID))
+                    }
+                } label: {
+                    Image(systemName: "plus")
+                }
+                .help(L.string("ui.hint.add_api_provider", using: lm))
+            }
+        }
     }
 
     private var apiProviderList: some View {
@@ -28,17 +41,6 @@ struct APIProvidersView: View {
                         using: lm
                     )
                 )
-            } trailing: {
-                Button {
-                    manager.addAPIProvider()
-                    if let apiProviderID = manager.selectedAPIProviderID {
-                        path.append(.apiProvider(apiProviderID))
-                    }
-                } label: {
-                    Image(systemName: "plus")
-                }
-                .buttonStyle(.borderless)
-                .help(L.string("ui.hint.add_api_provider", using: lm))
             }
 
             SettingsDivider()
@@ -77,10 +79,24 @@ struct APIProvidersView: View {
     private func apiProviderRow(_ apiProvider: APIProvider) -> some View {
         SettingsRow {
             VStack(alignment: .leading, spacing: 4) {
-                Text(apiProvider.name)
-                    .font(.subheadline.weight(.semibold))
+                HStack(spacing: 7) {
+                    Text(apiProvider.name)
+                        .font(.subheadline.weight(.semibold))
 
-                Text(keySummary(for: apiProvider))
+                    if apiProvider.isReady {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(.green)
+                            .help(L.string("ui.label.ready", using: lm))
+                    } else {
+                        Image(systemName: "exclamationmark.circle.fill")
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(.orange)
+                            .help(L.string("ui.label.incomplete", using: lm))
+                    }
+                }
+
+                Text(providerDetailText(apiProvider))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -88,12 +104,14 @@ struct APIProvidersView: View {
             }
         } trailing: {
             HStack(spacing: 12) {
-                Text(apiProvider.baseURL.nilIfBlank ?? L.string("ui.label.no_base_url", using: lm))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                    .frame(maxWidth: 260, alignment: .trailing)
+                Button {
+                    openProviderWebsite(apiProvider)
+                } label: {
+                    Image(systemName: "safari")
+                }
+                .buttonStyle(.borderless)
+                .disabled(providerWebsiteURL(for: apiProvider) == nil)
+                .help(L.string("ui.hint.open_provider_website", using: lm))
 
                 Image(systemName: "chevron.right")
                     .font(.caption.weight(.semibold))
@@ -102,8 +120,30 @@ struct APIProvidersView: View {
         }
     }
 
-    private func keySummary(for apiProvider: APIProvider) -> String {
-        L.string("ui.api_provider.keys_count", Int64(apiProvider.keys.count), using: lm)
+    private func providerDetailText(_ apiProvider: APIProvider) -> String {
+        let baseURL = apiProvider.baseURL.nilIfBlank ?? L.string("ui.label.no_base_url", using: lm)
+        let keyNames = apiProvider.keys.map { $0.name }.joined(separator: ", ")
+        let keysDisplay = keyNames.isEmpty ? L.string("ui.label.no_key", using: lm) : keyNames
+
+        return "\(baseURL) · \(keysDisplay)"
+    }
+
+    private func openProviderWebsite(_ apiProvider: APIProvider) {
+        guard let url = providerWebsiteURL(for: apiProvider) else { return }
+        NSWorkspace.shared.open(url)
+    }
+
+    private func providerWebsiteURL(for apiProvider: APIProvider) -> URL? {
+        guard let trimmed = apiProvider.providerWebsiteURL.nilIfBlank else { return nil }
+
+        let candidate = trimmed.contains("://") ? trimmed : "https://\(trimmed)"
+        guard let url = URL(string: candidate),
+              let scheme = url.scheme?.lowercased(),
+              ["http", "https"].contains(scheme),
+              url.host?.isEmpty == false
+        else { return nil }
+
+        return url
     }
 }
 
