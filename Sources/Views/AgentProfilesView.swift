@@ -140,18 +140,9 @@ struct AgentProfilesView: View {
                     .truncationMode(.middle)
             }
         } trailing: {
-            HStack(spacing: 12) {
-                Text(manager.apiProvider(for: profile)?.baseURL.nilIfBlank ?? L.string("ui.label.no_base_url", using: lm))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                    .frame(maxWidth: 240, alignment: .trailing)
-
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.tertiary)
-            }
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.tertiary)
         }
     }
 
@@ -162,7 +153,8 @@ struct AgentProfilesView: View {
 
         let key = manager.apiProviderKey(for: profile)
         let keyName = apiProvider.keys.count > 1 ? " · \(key?.name ?? "")" : ""
-        return "\(apiProvider.name)\(keyName) · \(profile.displayModel) · \(key?.redactedKey ?? L.string("ui.label.no_key", using: lm))"
+        let keyValue = key?.redactedKey ?? L.string("ui.label.no_key", using: lm)
+        return "\(apiProvider.name)\(keyName) · \(profile.displayModel) · \(keyValue)"
     }
 
     private var targetURLs: [URL] {

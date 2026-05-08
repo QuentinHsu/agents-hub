@@ -103,9 +103,7 @@ struct APIProvidersView: View {
     }
 
     private func keySummary(for apiProvider: APIProvider) -> String {
-        let keyCount = L.string("ui.api_provider.keys_count", Int64(apiProvider.keys.count), using: lm)
-        guard let firstKey = apiProvider.keys.first else { return keyCount }
-        return "\(keyCount) · \(firstKey.name) · \(firstKey.redactedKey)"
+        L.string("ui.api_provider.keys_count", Int64(apiProvider.keys.count), using: lm)
     }
 }
 
