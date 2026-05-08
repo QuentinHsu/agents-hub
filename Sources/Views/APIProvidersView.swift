@@ -60,14 +60,7 @@ struct APIProvidersView: View {
                 }
             }
         }
-        .settingsCard(
-            L.string("ui.api_providers.title", using: lm),
-            subtitle: L.string(
-                "ui.api_providers.saved_count",
-                Int64(manager.apiProviders.count),
-                using: lm
-            )
-        )
+        .settingsCard()
     }
 
     private func apiProviderRow(_ apiProvider: APIProvider) -> some View {

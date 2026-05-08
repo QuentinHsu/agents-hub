@@ -59,14 +59,7 @@ struct AgentProfilesView: View {
                 }
             }
         }
-        .settingsCard(
-            L.string("ui.agent_profiles.configurations", using: lm),
-            subtitle: L.string(
-                "ui.agent_profiles.saved_count",
-                Int64(manager.profiles(for: provider).count),
-                using: lm
-            )
-        )
+        .settingsCard()
     }
 
     private var claudeSharedSettings: some View {
