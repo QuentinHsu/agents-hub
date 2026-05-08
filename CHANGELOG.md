@@ -1,3 +1,13 @@
+## v0.0.3
+
+> 本次更新让列表与设置页的展示更简洁统一，减少重复标题带来的干扰，浏览和调整内容时更清爽顺手。
+
+### 优化改进
+
+- **views**：
+  - remove repeated list card headings
+  - extract shared settings page components
+
 ## v0.0.2
 
 > 本次更新让你在管理服务提供商和调整配置时能更快看清状态、减少重复信息，并获得更统一清爽的设置界面体验。
