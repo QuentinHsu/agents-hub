@@ -5,6 +5,11 @@
 "ui.settings.language" = "语言";
 "ui.settings.storage" = "存储";
 "ui.settings.config_path" = "配置路径";
+"ui.settings.about_subtitle" = "管理 Claude Code 与 Codex API 配置，并将它们应用到本地 CLI 配置文件。";
+"ui.settings.version" = "版本";
+"ui.settings.source_repository" = "源码仓库";
+"ui.app.updates" = "更新";
+"ui.app.check_for_updates" = "检查更新...";
 
 /* Common actions */
 "ui.action.add_configuration" = "添加配置";
@@ -28,6 +33,7 @@
 /* Sidebar */
 "ui.sidebar.overview" = "概览";
 "ui.sidebar.settings" = "设置";
+"ui.sidebar.about" = "关于";
 
 /* Toolbar help */
 "ui.hint.add_configuration_selected_agent" = "为选中的智能体添加配置";

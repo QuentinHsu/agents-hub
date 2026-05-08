@@ -10,12 +10,14 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/QuentinHsu/SVGPath.git", branch: "main"),
+        .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.9.1"),
     ],
     targets: [
         .executableTarget(
             name: "AgentsHub",
             dependencies: [
                 .product(name: "SVGPath", package: "SVGPath"),
+                .product(name: "Sparkle", package: "Sparkle"),
             ],
             path: "Sources",
             resources: [

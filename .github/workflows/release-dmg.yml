@@ -1,0 +1,59 @@
+name: Release DMG
+
+on:
+  push:
+    tags:
+      - "v*"
+      - "*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Optional explicit tag (v1.2.3 or 1.2.3). Leave empty to auto-increment."
+        required: false
+        type: string
+      bump:
+        description: "Version bump when tag is empty."
+        required: false
+        default: auto
+        type: choice
+        options:
+          - auto
+          - patch
+          - minor
+          - major
+      macos_runner:
+        description: "macOS runner label for the build job."
+        required: false
+        default: macos-26
+        type: string
+      xcode_version:
+        description: "Xcode version selected by setup-xcode."
+        required: false
+        default: "26.4.1"
+        type: string
+
+jobs:
+  release:
+    uses: QuentinHsu/workflow/.github/workflows/macos-swiftpm-sparkle-dmg-release.yml@main
+    permissions:
+      contents: write
+    with:
+      app_target_name: AgentsHub
+      app_display_name: Agents Hub
+      app_bundle_id: com.agentshub.app
+      app_min_macos: "15.0"
+      app_icon_path: Assets/AppIcon.icns
+      macos_runner: ${{ github.event_name == 'workflow_dispatch' && inputs.macos_runner || vars.MACOS_RUNNER || 'macos-26' }}
+      xcode_version: ${{ github.event_name == 'workflow_dispatch' && inputs.xcode_version || vars.XCODE_VERSION || '26.4.1' }}
+      release_kit_repository: QuentinHsu/workflow
+      release_kit_ref: main
+      release_kit_path: release-kits/macos/swiftpm-sparkle
+      changelog_path: CHANGELOG.md
+      changelog_language: zh-CN
+      sparkle_public_ed_key: ${{ vars.SPARKLE_PUBLIC_ED_KEY }}
+      tag: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || '' }}
+      bump: ${{ github.event_name == 'workflow_dispatch' && inputs.bump || 'auto' }}
+      architectures: '["arm64","x86_64"]'
+    secrets:
+      sparkle_private_ed_key: ${{ secrets.SPARKLE_PRIVATE_ED_KEY }}
+      changelog_summary_token: ${{ secrets.COPILOT_GITHUB_TOKEN }}

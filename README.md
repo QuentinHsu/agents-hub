@@ -28,6 +28,8 @@ A native macOS app for managing Claude Code and Codex API profiles and applying 
 
 Agents Hub stores profiles locally and writes the selected profile into each tool's existing configuration location.
 
+The app supports automatic updates via Sparkle. You can also check for updates manually from the app menu or `Settings` -> `About`.
+
 ## Quick Start
 
 1. Open Agents Hub.
@@ -112,6 +114,12 @@ Build the app bundle:
 
 ```sh
 make app
+```
+
+Build the DMG installer:
+
+```sh
+make dmg
 ```
 
 Install the built app into `/Applications`:

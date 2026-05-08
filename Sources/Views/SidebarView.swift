@@ -4,6 +4,7 @@ enum SidebarSelection: Hashable {
     case overview
     case agent(ProviderKind)
     case settings
+    case about
 }
 
 struct SidebarView: View {
@@ -33,6 +34,8 @@ struct SidebarView: View {
             Section {
                 L.label("ui.sidebar.settings", systemImage: "gearshape", using: lm)
                     .tag(SidebarSelection.settings)
+                L.label("ui.sidebar.about", systemImage: "info.circle", using: lm)
+                    .tag(SidebarSelection.about)
             }
         }
         .listStyle(.sidebar)
@@ -46,7 +49,7 @@ struct SidebarView: View {
             self.selection = selection
 
             switch selection {
-            case .overview, .settings:
+            case .overview, .settings, .about:
                 break
             case .agent(let provider):
                 manager.selectedProvider = provider

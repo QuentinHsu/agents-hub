@@ -1,0 +1,107 @@
+import AppKit
+import SwiftUI
+
+struct AboutView: View {
+    @Environment(LocalizationManager.self) private var lm
+    let appUpdater: AppUpdater
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                appHeader
+
+                VStack(alignment: .leading, spacing: 0) {
+                    SettingsRow {
+                        L.text("ui.settings.version", using: lm)
+                    } trailing: {
+                        Text(AppInfo.versionDisplay)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    SettingsDivider()
+
+                    SettingsRow {
+                        L.text("ui.settings.source_repository", using: lm)
+                    } trailing: {
+                        Link(
+                            AppInfo.sourceRepository.absoluteString,
+                            destination: AppInfo.sourceRepository
+                        )
+                    }
+
+                    SettingsDivider()
+
+                    SettingsRow {
+                        L.text("ui.app.updates", using: lm)
+                    } trailing: {
+                        Button {
+                            appUpdater.checkForUpdates()
+                        } label: {
+                            Label(L.string("ui.app.check_for_updates", using: lm), systemImage: "arrow.down.circle")
+                        }
+                    }
+                }
+                .settingsCard()
+            }
+            .padding(.horizontal, 22)
+            .padding(.vertical, 18)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .navigationTitle(L.string("ui.settings.about", using: lm))
+    }
+
+    private var appHeader: some View {
+        HStack(spacing: 14) {
+            Image(nsImage: AppInfo.appIcon)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 58, height: 58)
+
+            VStack(alignment: .leading, spacing: 5) {
+                Text(AppInfo.displayName)
+                    .font(.title2.weight(.semibold))
+
+                L.text("ui.settings.about_subtitle", using: lm)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .settingsCard()
+    }
+}
+
+private enum AppInfo {
+    static let displayName = "Agents Hub"
+    static let sourceRepository = URL(string: "https://github.com/QuentinHsu/agents-hub")!
+
+    @MainActor
+    static var appIcon: NSImage {
+        NSApplication.shared.applicationIconImage
+    }
+
+    static var versionDisplay: String {
+        let info = Bundle.main.infoDictionary ?? [:]
+        let version = info["CFBundleShortVersionString"] as? String
+        let build = info["CFBundleVersion"] as? String
+
+        switch (version?.nilIfEmpty, build?.nilIfEmpty) {
+        case let (.some(version), .some(build)) where build != version:
+            return "\(version) (\(build))"
+        case let (.some(version), _):
+            return version
+        case let (_, .some(build)):
+            return build
+        default:
+            return "0.1.0"
+        }
+    }
+}
+
+private extension String {
+    var nilIfEmpty: String? {
+        isEmpty ? nil : self
+    }
+}

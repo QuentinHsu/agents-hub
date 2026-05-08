@@ -8,6 +8,7 @@ enum DetailRoute: Hashable {
 struct ContentView: View {
     @Environment(LocalizationManager.self) private var lm
     @Bindable var manager: ProfileManager
+    let appUpdater: AppUpdater
     @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
     @State private var sidebarSelection: SidebarSelection? = .overview
     @State private var detailPath: [DetailRoute] = []
@@ -43,7 +44,7 @@ struct ContentView: View {
         .animation(.spring(response: 0.28, dampingFraction: 0.86), value: visibleFeedback)
         .onChange(of: sidebarSelection) { _, selection in
             switch selection {
-            case .overview, .settings, .none:
+            case .overview, .settings, .about, .none:
                 detailPath.removeAll()
             case .agent(let provider):
                 manager.selectedProvider = provider
@@ -125,6 +126,8 @@ struct ContentView: View {
             AgentProfilesView(manager: manager, provider: provider, path: $detailPath)
         case .settings:
             SettingsView()
+        case .about:
+            AboutView(appUpdater: appUpdater)
         case .overview, .none:
             HomeDashboardView(
                 manager: manager,
@@ -138,7 +141,7 @@ struct ContentView: View {
         switch sidebarSelection {
         case .agent(let provider):
             provider
-        case .overview, .settings, .none:
+        case .overview, .settings, .about, .none:
             nil
         }
     }
@@ -155,7 +158,7 @@ struct ContentView: View {
         switch sidebarSelection {
         case .overview, .none:
             true
-        case .agent, .settings:
+        case .agent, .settings, .about:
             false
         }
     }

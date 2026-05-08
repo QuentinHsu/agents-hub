@@ -28,6 +28,8 @@
 
 Agents Hub 会在本地保存配置，并把选中的配置写入各工具现有的配置位置。
 
+应用支持通过 Sparkle 自动更新。你也可以从应用菜单或 `设置` -> `关于` 手动检查更新。
+
 ## 快速开始
 
 1. 打开 Agents Hub。
@@ -112,6 +114,12 @@ make build
 
 ```sh
 make app
+```
+
+构建 DMG 安装包：
+
+```sh
+make dmg
 ```
 
 安装到 `/Applications`：

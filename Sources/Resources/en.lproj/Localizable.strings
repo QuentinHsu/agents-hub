@@ -5,6 +5,11 @@
 "ui.settings.language" = "Language";
 "ui.settings.storage" = "Storage";
 "ui.settings.config_path" = "Config Path";
+"ui.settings.about_subtitle" = "Manage Claude Code and Codex API profiles, then apply them to local CLI configuration files.";
+"ui.settings.version" = "Version";
+"ui.settings.source_repository" = "Source repository";
+"ui.app.updates" = "Updates";
+"ui.app.check_for_updates" = "Check for Updates...";
 
 /* Common actions */
 "ui.action.add_configuration" = "Add Configuration";
@@ -28,6 +33,7 @@
 /* Sidebar */
 "ui.sidebar.overview" = "Overview";
 "ui.sidebar.settings" = "Settings";
+"ui.sidebar.about" = "About";
 
 /* Toolbar help */
 "ui.hint.add_configuration_selected_agent" = "Add a configuration for the selected agent";
