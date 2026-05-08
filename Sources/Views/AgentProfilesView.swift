@@ -53,7 +53,7 @@ struct AgentProfilesView: View {
                         manager.selectProfile(profile)
                         manager.applySelectedProfile()
                     }
-                    .disabled(!profile.isReady)
+                    .disabled(!manager.isProfileReady(profile))
 
                     Button(L.string("ui.action.duplicate", using: lm)) {
                         manager.selectProfile(profile)
@@ -133,7 +133,7 @@ struct AgentProfilesView: View {
                     }
                 }
 
-                Text("\(profile.displayModel) · \(profile.redactedKey)")
+                Text(profileDetailText(profile))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -141,7 +141,7 @@ struct AgentProfilesView: View {
             }
         } trailing: {
             HStack(spacing: 12) {
-                Text(profile.baseURL.nilIfBlank ?? L.string("ui.label.no_base_url", using: lm))
+                Text(manager.apiProvider(for: profile)?.baseURL.nilIfBlank ?? L.string("ui.label.no_base_url", using: lm))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -153,6 +153,16 @@ struct AgentProfilesView: View {
                     .foregroundStyle(.tertiary)
             }
         }
+    }
+
+    private func profileDetailText(_ profile: APIProfile) -> String {
+        guard let apiProvider = manager.apiProvider(for: profile) else {
+            return L.string("ui.api_provider.no_provider", using: lm)
+        }
+
+        let key = manager.apiProviderKey(for: profile)
+        let keyName = apiProvider.keys.count > 1 ? " · \(key?.name ?? "")" : ""
+        return "\(apiProvider.name)\(keyName) · \(profile.displayModel) · \(key?.redactedKey ?? L.string("ui.label.no_key", using: lm))"
     }
 
     private var targetURLs: [URL] {
@@ -206,12 +216,5 @@ private struct FieldTitle: View {
                 .lineLimit(1)
                 .truncationMode(.middle)
         }
-    }
-}
-
-private extension String {
-    var nilIfBlank: String? {
-        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : trimmed
     }
 }

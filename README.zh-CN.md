@@ -56,7 +56,7 @@ Claude Code 配置会写入 `~/.claude/settings.json`。
 | 字段 | 写入内容 |
 | --- | --- |
 | `settings.model` | 选中配置的模型 |
-| `env.ANTHROPIC_API_KEY` | 选中配置的 API Key |
+| `env.ANTHROPIC_AUTH_TOKEN` | 选中配置的 API Key |
 | `env.ANTHROPIC_BASE_URL` | 选中配置的 Base URL |
 | `env.ANTHROPIC_MODEL` | 选中配置的模型 |
 | `env.ANTHROPIC_DEFAULT_OPUS_MODEL` | 默认 Opus 模型 |
@@ -74,7 +74,7 @@ Codex 配置会写入 `~/.codex/config.toml` 和 `~/.codex/auth.json`。
 | `~/.codex/config.toml` | 选中的模型和 `model_providers.agents-hub` 供应商设置 |
 | `~/.codex/auth.json` | 选中配置的 `OPENAI_API_KEY` |
 
-Agents Hub 会以 `wire_api = "responses"` 和 `requires_openai_auth = true` 写入 Codex 配置。供应商显示名称可以使用 `Agents Hub`，也可以使用选中的配置名称。
+Agents Hub 会以 `wire_api = "responses"` 和 `requires_openai_auth = true` 写入 Codex 配置。受管理的 Codex provider ID 始终写为 `model_providers.agents-hub`；显示名称可以使用 `Agents Hub`，也可以使用选中的配置名称。
 
 ## 检查本地状态
 

@@ -3,6 +3,8 @@ import Foundation
 struct APIProfile: Identifiable, Hashable, Codable, Sendable {
     var id: UUID
     var provider: ProviderKind
+    var apiProviderID: UUID?
+    var apiProviderKeyID: UUID?
     var name: String
     var baseURL: String
     var providerWebsiteURL: String
@@ -16,6 +18,8 @@ struct APIProfile: Identifiable, Hashable, Codable, Sendable {
     init(
         id: UUID = UUID(),
         provider: ProviderKind,
+        apiProviderID: UUID? = nil,
+        apiProviderKeyID: UUID? = nil,
         name: String,
         baseURL: String? = nil,
         providerWebsiteURL: String = "",
@@ -28,6 +32,8 @@ struct APIProfile: Identifiable, Hashable, Codable, Sendable {
     ) {
         self.id = id
         self.provider = provider
+        self.apiProviderID = apiProviderID
+        self.apiProviderKeyID = apiProviderKeyID
         self.name = name
         self.baseURL = baseURL ?? provider.defaultBaseURL
         self.providerWebsiteURL = providerWebsiteURL
@@ -42,6 +48,8 @@ struct APIProfile: Identifiable, Hashable, Codable, Sendable {
     enum CodingKeys: String, CodingKey {
         case id
         case provider
+        case apiProviderID
+        case apiProviderKeyID
         case name
         case baseURL
         case providerWebsiteURL
@@ -57,6 +65,11 @@ struct APIProfile: Identifiable, Hashable, Codable, Sendable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         provider = try container.decode(ProviderKind.self, forKey: .provider)
         id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+
+        // Migration: if apiProviderID is missing, keep it nil so ProfileManager can assign defaults
+        apiProviderID = try container.decodeIfPresent(UUID.self, forKey: .apiProviderID)
+        apiProviderKeyID = try container.decodeIfPresent(UUID.self, forKey: .apiProviderKeyID)
+
         name = try container.decodeIfPresent(String.self, forKey: .name) ?? provider.displayName
         baseURL = try container.decodeIfPresent(String.self, forKey: .baseURL) ?? provider.defaultBaseURL
         providerWebsiteURL = try container.decodeIfPresent(String.self, forKey: .providerWebsiteURL) ?? ""
@@ -75,21 +88,15 @@ struct APIProfile: Identifiable, Hashable, Codable, Sendable {
     }
 
     var redactedKey: String {
-        let trimmed = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return LocalizationManager.localize("ui.label.no_key") }
-        guard trimmed.count > 8 else { return String(repeating: "•", count: trimmed.count) }
-
-        return "\(trimmed.prefix(4))••••\(trimmed.suffix(4))"
+        apiKey.redacted(emptyPlaceholder: LocalizationManager.localize("ui.label.no_key"))
     }
 
     var isReady: Bool {
-        !baseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-            !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        baseURL.nilIfBlank != nil && apiKey.nilIfBlank != nil
     }
 
     var displayModel: String {
-        let trimmed = model.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? provider.defaultModel : trimmed
+        model.nilIfBlank ?? provider.defaultModel
     }
 
     var codexProviderDisplayName: String {
@@ -97,22 +104,49 @@ struct APIProfile: Identifiable, Hashable, Codable, Sendable {
         case .agentsHub:
             "Agents Hub"
         case .profileName:
-            name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? provider.displayName : name
+            name.nilIfBlank ?? provider.displayName
         }
+    }
+
+    func resolved(with apiProvider: APIProvider?, key: APIProviderKey?) -> APIProfile {
+        guard let apiProvider else { return self }
+
+        var profile = self
+
+        if let providerBaseURL = apiProvider.baseURL.nilIfBlank {
+            profile.baseURL = mergedBaseURL(providerBase: providerBaseURL, profileURL: self.baseURL)
+        }
+
+        profile.providerWebsiteURL = apiProvider.providerWebsiteURL
+
+        if let key, let keyValue = key.apiKey.nilIfBlank {
+            profile.apiKey = keyValue
+        }
+
+        return profile
+    }
+
+    private func mergedBaseURL(providerBase: String, profileURL: String) -> String {
+        guard let profileURL = URL(string: profileURL),
+              let providerURL = URL(string: providerBase)
+        else {
+            return providerBase
+        }
+
+        let profilePath = profileURL.path
+        let providerPath = providerURL.path
+
+        if !profilePath.isEmpty && profilePath != "/" && (providerPath.isEmpty || providerPath == "/") {
+            return providerBase.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + profilePath
+        }
+
+        return providerBase
     }
 }
 
 enum CodexProviderNameMode: String, CaseIterable, Codable, Identifiable, Sendable {
     case agentsHub
     case profileName
-
-    var id: String { rawValue }
-}
-
-enum ClaudeCodeOnboardingMode: String, CaseIterable, Codable, Identifiable, Sendable {
-    case leaveUnchanged
-    case markCompleted
-    case clearCompleted
 
     var id: String { rawValue }
 }
@@ -144,45 +178,60 @@ struct ClaudeCodeModelConfiguration: Hashable, Codable, Sendable {
 
 struct AgentsHubState: Codable, Sendable {
     var profiles: [APIProfile]
+    var apiProviders: [APIProvider]
     var skipClaudeCodeOnboarding: Bool
 
     init(
         profiles: [APIProfile],
+        apiProviders: [APIProvider],
         skipClaudeCodeOnboarding: Bool = false
     ) {
         self.profiles = profiles
+        self.apiProviders = apiProviders
         self.skipClaudeCodeOnboarding = skipClaudeCodeOnboarding
     }
 
     enum CodingKeys: String, CodingKey {
         case profiles
+        case apiProviders
         case skipClaudeCodeOnboarding
-        case claudeCodeOnboardingMode
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         profiles = try container.decodeIfPresent([APIProfile].self, forKey: .profiles) ?? []
-        if let value = try container.decodeIfPresent(Bool.self, forKey: .skipClaudeCodeOnboarding) {
-            skipClaudeCodeOnboarding = value
-        } else if let legacyMode = try container.decodeIfPresent(
-            ClaudeCodeOnboardingMode.self,
-            forKey: .claudeCodeOnboardingMode
-        ) {
-            skipClaudeCodeOnboarding = legacyMode == .markCompleted
-        } else {
-            skipClaudeCodeOnboarding = false
-        }
+        apiProviders = try container.decodeIfPresent([APIProvider].self, forKey: .apiProviders) ?? []
+        skipClaudeCodeOnboarding = try container.decodeIfPresent(Bool.self, forKey: .skipClaudeCodeOnboarding) ?? false
     }
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(profiles, forKey: .profiles)
+        try container.encode(apiProviders, forKey: .apiProviders)
         try container.encode(skipClaudeCodeOnboarding, forKey: .skipClaudeCodeOnboarding)
     }
 
-    static let empty = AgentsHubState(profiles: [
-        APIProfile(provider: .claudeCode, name: "Claude Code"),
-        APIProfile(provider: .codex, name: "Codex")
-    ])
+    static let empty: AgentsHubState = {
+        let defaultProvider = APIProvider(name: "Default", baseURL: "https://api.openai.com/v1")
+        let defaultKeyID = defaultProvider.keys.first?.id
+
+        return AgentsHubState(
+            profiles: [
+                APIProfile(
+                    provider: .claudeCode,
+                    apiProviderID: defaultProvider.id,
+                    apiProviderKeyID: defaultKeyID,
+                    name: "Claude Code"
+                ),
+                APIProfile(
+                    provider: .codex,
+                    apiProviderID: defaultProvider.id,
+                    apiProviderKeyID: defaultKeyID,
+                    name: "Codex"
+                )
+            ],
+            apiProviders: [defaultProvider]
+        )
+    }()
+
 }

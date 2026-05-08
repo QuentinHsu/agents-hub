@@ -2,6 +2,7 @@ import SwiftUI
 
 enum SidebarSelection: Hashable {
     case overview
+    case apiProviders
     case agent(ProviderKind)
     case settings
     case about
@@ -17,6 +18,8 @@ struct SidebarView: View {
             Section {
                 L.label("ui.sidebar.overview", systemImage: "gauge.with.dots.needle.50percent", using: lm)
                     .tag(SidebarSelection.overview)
+                L.label("ui.sidebar.api_providers", systemImage: "server.rack", using: lm)
+                    .tag(SidebarSelection.apiProviders)
             }
 
             Section {
@@ -49,7 +52,7 @@ struct SidebarView: View {
             self.selection = selection
 
             switch selection {
-            case .overview, .settings, .about:
+            case .overview, .apiProviders, .settings, .about:
                 break
             case .agent(let provider):
                 manager.selectedProvider = provider

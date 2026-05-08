@@ -3,6 +3,8 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(LocalizationManager.self) private var lm
+    @Bindable var manager: ProfileManager
+    @State private var isShowingResetConfirmation = false
 
     var body: some View {
         ScrollView {
@@ -15,6 +17,17 @@ struct SettingsView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .navigationTitle(L.string("ui.settings.title", using: lm))
+        .confirmationDialog(
+            L.string("ui.settings.reset_data", using: lm),
+            isPresented: $isShowingResetConfirmation
+        ) {
+            Button(L.string("ui.settings.reset_data_confirm", using: lm), role: .destructive) {
+                manager.resetState()
+            }
+            Button(L.string("ui.action.cancel", using: lm), role: .cancel) {}
+        } message: {
+            Text(L.string("ui.settings.reset_data_detail", using: lm))
+        }
     }
 
     private var generalSettings: some View {
@@ -63,6 +76,23 @@ struct SettingsView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .frame(maxWidth: .infinity, alignment: .leading)
+
+            SettingsDivider()
+                .padding(.leading, 0)
+
+            SettingsItemRow(
+                title: L.string("ui.settings.reset_data", using: lm),
+                detail: L.string("ui.settings.reset_data_detail", using: lm)
+            ) {
+                Button(role: .destructive) {
+                    isShowingResetConfirmation = true
+                } label: {
+                    Image(systemName: "arrow.counterclockwise")
+                }
+                .buttonStyle(.borderless)
+                .controlSize(.small)
+                .help(L.string("ui.settings.reset_data", using: lm))
+            }
         }
     }
 

@@ -321,10 +321,3 @@ private extension Error {
         return (nsError.userInfo[NSUnderlyingErrorKey] as? NSError)?.code == NSURLErrorTimedOut
     }
 }
-
-private extension String {
-    var nilIfBlank: String? {
-        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : trimmed
-    }
-}

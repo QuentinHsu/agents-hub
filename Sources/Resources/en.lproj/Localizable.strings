@@ -5,6 +5,9 @@
 "ui.settings.language" = "Language";
 "ui.settings.storage" = "Storage";
 "ui.settings.config_path" = "Config Path";
+"ui.settings.reset_data" = "Reset Data";
+"ui.settings.reset_data_detail" = "Restore default providers and agent configurations for development.";
+"ui.settings.reset_data_confirm" = "Reset";
 "ui.settings.about_subtitle" = "Manage Claude Code and Codex API profiles, then apply them to local CLI configuration files.";
 "ui.settings.version" = "Version";
 "ui.settings.source_repository" = "Source repository";
@@ -18,6 +21,8 @@
 "ui.action.set_current" = "Set Current";
 "ui.action.refresh" = "Refresh";
 "ui.action.reveal_in_finder" = "Reveal in Finder";
+"ui.action.add_api_provider" = "Add Provider";
+"ui.action.cancel" = "Cancel";
 
 /* Common labels */
 "ui.label.active" = "Active";
@@ -32,6 +37,7 @@
 
 /* Sidebar */
 "ui.sidebar.overview" = "Overview";
+"ui.sidebar.api_providers" = "Providers";
 "ui.sidebar.settings" = "Settings";
 "ui.sidebar.about" = "About";
 
@@ -40,6 +46,11 @@
 "ui.hint.duplicate_configuration" = "Duplicate the selected configuration";
 "ui.hint.delete_configuration" = "Delete the selected configuration";
 "ui.hint.set_current_configuration" = "Set the selected configuration as current";
+"ui.hint.add_api_provider" = "Add an API provider";
+"ui.hint.duplicate_api_provider" = "Duplicate the selected API provider";
+"ui.hint.delete_api_provider" = "Delete the selected API provider";
+"ui.hint.add_api_provider_key" = "Add a named API key";
+"ui.hint.delete_api_provider_key" = "Delete this API key";
 
 /* Dashboard */
 "ui.dashboard.agent_status" = "Agent Status";
@@ -52,11 +63,31 @@
 "ui.hint.add_configuration_for_agent" = "Add a configuration for %@";
 "ui.agent_profiles.shared_settings" = "Settings";
 
+/* API providers */
+"ui.api_providers.title" = "Providers";
+"ui.api_providers.saved_count" = "%lld saved";
+"ui.api_provider.no_provider" = "No Provider";
+"ui.api_provider.name" = "Provider Name";
+"ui.api_provider.name_detail" = "Used when choosing a provider for agent configurations";
+"ui.api_provider.name_placeholder" = "Provider name";
+"ui.api_provider.base_url_detail" = "Shared by all keys on this provider";
+"ui.api_provider.keys" = "Keys";
+"ui.api_provider.keys_detail" = "Named keys let one provider use different channels";
+"ui.api_provider.keys_count" = "%lld keys";
+"ui.api_provider.key_name" = "Key Name";
+"ui.api_provider.key_name_placeholder" = "Channel name";
+"ui.api_provider.key_api_key_detail" = "Stored on this provider and reused by agent configurations";
+
 /* Profile detail */
 "ui.profile.no_profile" = "No Profile";
 "ui.profile.profile_name" = "Profile Name";
 "ui.profile.profile_name_detail" = "Only used inside Agents Hub";
 "ui.profile.name_placeholder" = "Name";
+"ui.profile.api_provider" = "API Provider";
+"ui.profile.api_provider_detail" = "Base URL and website come from the selected provider";
+"ui.profile.api_provider_key" = "Provider Key";
+"ui.profile.api_provider_key_detail" = "Choose which named key/channel this configuration uses";
+"ui.profile.api_provider_data" = "Provider Data";
 "ui.profile.base_url" = "Base URL";
 "ui.profile.provider_website" = "Provider Website";
 "ui.profile.provider_website_detail" = "Official website for this provider";
@@ -94,11 +125,16 @@
 "status.profile_saved" = "%@ saved.";
 "status.profile_saved_and_applied" = "%@ saved and applied to %@.";
 "status.profile_applied" = "%@ applied to %@.";
+"status.api_provider_saved" = "%@ provider saved.";
 "status.claude_onboarding_updated" = "Claude onboarding state updated.";
+"status.state_reset" = "Agents Hub data has been reset.";
 
 /* Defaults */
 "profile.default_name" = "%@ Config %lld";
 "profile.copy_name" = "%@ Copy";
+"api_provider.default_name" = "Provider %lld";
+"api_provider.default_provider_name" = "Default Provider";
+"api_provider.key_default_name" = "Key %lld";
 
 /* Errors */
 "error.invalid_url" = "Invalid URL";

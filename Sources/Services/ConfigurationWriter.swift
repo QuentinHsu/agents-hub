@@ -2,51 +2,57 @@ import Foundation
 
 struct ConfigurationWriter: Sendable {
     func apply(_ profile: APIProfile) throws {
-        switch profile.provider {
+        try apply(AgentConfiguration(profile))
+    }
+
+    private func apply(_ configuration: AgentConfiguration) throws {
+        switch configuration.provider {
         case .claudeCode:
-            try applyClaude(profile)
+            try applyClaude(configuration)
         case .codex:
-            try applyCodex(profile)
+            try applyCodex(configuration)
         }
     }
 
-    private func applyClaude(_ profile: APIProfile) throws {
-        var settings = try loadJSONDictionary(from: AppPaths.claudeSettingsURL)
+    private func applyClaude(_ configuration: AgentConfiguration) throws {
+        var settings: [String: Any]
+        do {
+            settings = try loadJSONDictionary(from: AppPaths.claudeSettingsURL)
+        } catch {
+            settings = [:]
+        }
 
         settings["apiKeyHelper"] = nil
-        settings["model"] = trimmedValue(profile.model)
+        settings["model"] = configuration.model.nilIfBlank
         settings["env"] = mergedEnv(
             existing: settings["env"] as? [String: Any],
             values: [
-                "ANTHROPIC_API_KEY": profile.apiKey,
-                "ANTHROPIC_BASE_URL": profile.baseURL,
-                "ANTHROPIC_MODEL": profile.model,
-                "ANTHROPIC_DEFAULT_OPUS_MODEL": profile.claudeCodeModels.defaultOpusModel,
-                "ANTHROPIC_DEFAULT_SONNET_MODEL": profile.claudeCodeModels.defaultSonnetModel,
-                "ANTHROPIC_DEFAULT_HAIKU_MODEL": profile.claudeCodeModels.defaultHaikuModel
-            ]
+                "ANTHROPIC_AUTH_TOKEN": configuration.apiKey,
+                "ANTHROPIC_BASE_URL": configuration.baseURL,
+                "ANTHROPIC_MODEL": configuration.model,
+                "ANTHROPIC_DEFAULT_OPUS_MODEL": configuration.claudeCodeModels.defaultOpusModel,
+                "ANTHROPIC_DEFAULT_SONNET_MODEL": configuration.claudeCodeModels.defaultSonnetModel,
+                "ANTHROPIC_DEFAULT_HAIKU_MODEL": configuration.claudeCodeModels.defaultHaikuModel
+            ],
+            removing: ["ANTHROPIC_API_KEY"]
         )
 
         try writeJSONDictionary(settings, to: AppPaths.claudeSettingsURL)
     }
 
-    private func applyCodex(_ profile: APIProfile) throws {
-        try writeCodexConfig(profile)
-        try writeCodexAuth(profile)
+    private func applyCodex(_ configuration: AgentConfiguration) throws {
+        try writeCodexConfig(configuration)
+        try writeCodexAuth(configuration)
     }
 
-    private func writeCodexConfig(_ profile: APIProfile) throws {
-        let content = """
-        model = "\(tomlEscape(profile.model))"
-        model_provider = "agents-hub"
-
-        [model_providers.agents-hub]
-        name = "\(tomlEscape(profile.codexProviderDisplayName))"
-        base_url = "\(tomlEscape(profile.baseURL))"
-        wire_api = "responses"
-        requires_openai_auth = true
-
-        """
+    private func writeCodexConfig(_ configuration: AgentConfiguration) throws {
+        let existing: String
+        do {
+            existing = try loadText(from: AppPaths.codexConfigURL)
+        } catch {
+            existing = ""
+        }
+        let content = mergedCodexConfig(existing: existing, configuration: configuration)
 
         try FileManager.default.createDirectory(
             at: AppPaths.codexConfigURL.deletingLastPathComponent(),
@@ -55,19 +61,31 @@ struct ConfigurationWriter: Sendable {
         try content.write(to: AppPaths.codexConfigURL, atomically: true, encoding: .utf8)
     }
 
-    private func writeCodexAuth(_ profile: APIProfile) throws {
-        let payload: [String: Any] = [
-            "OPENAI_API_KEY": profile.apiKey
-        ]
+    private func writeCodexAuth(_ configuration: AgentConfiguration) throws {
+        var payload: [String: Any]
+        do {
+            payload = try loadJSONDictionary(from: AppPaths.codexAuthURL)
+        } catch {
+            payload = [:]
+        }
+        payload["OPENAI_API_KEY"] = configuration.apiKey.nilIfBlank
 
         try writeJSONDictionary(payload, to: AppPaths.codexAuthURL)
     }
 
-    private func mergedEnv(existing: [String: Any]?, values: [String: String]) -> [String: String] {
+    private func mergedEnv(
+        existing: [String: Any]?,
+        values: [String: String],
+        removing keysToRemove: Set<String> = []
+    ) -> [String: String] {
         var env = existing?.compactMapValues { $0 as? String } ?? [:]
 
+        for key in keysToRemove {
+            env.removeValue(forKey: key)
+        }
+
         for (key, value) in values {
-            if let trimmed = trimmedValue(value) {
+            if let trimmed = value.nilIfBlank {
                 env[key] = trimmed
             } else {
                 env.removeValue(forKey: key)
@@ -77,16 +95,7 @@ struct ConfigurationWriter: Sendable {
         return env
     }
 
-    private func trimmedValue(_ value: String) -> String? {
-        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : trimmed
-    }
-
     private func loadJSONDictionary(from url: URL) throws -> [String: Any] {
-        guard FileManager.default.fileExists(atPath: url.path()) else {
-            return [:]
-        }
-
         let data = try Data(contentsOf: url)
         let object = try JSONSerialization.jsonObject(with: data)
         return object as? [String: Any] ?? [:]
@@ -103,6 +112,10 @@ struct ConfigurationWriter: Sendable {
             options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
         )
         try data.write(to: url, options: .atomic)
+    }
+
+    private func loadText(from url: URL) throws -> String {
+        try String(contentsOf: url, encoding: .utf8)
     }
 
     func syncClaudeOnboarding(skip: Bool) throws {
@@ -144,5 +157,154 @@ struct ConfigurationWriter: Sendable {
             .replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "\"", with: "\\\"")
             .replacingOccurrences(of: "\n", with: "\\n")
+    }
+
+    private func mergedCodexConfig(existing: String, configuration: AgentConfiguration) -> String {
+        var lines = existing.isEmpty ? [] : existing.components(separatedBy: "\n")
+        if !lines.isEmpty && existing.hasSuffix("\n") {
+            lines.removeLast()
+        }
+
+        lines = removingCodexProviderBlock(from: lines)
+        lines = settingTopLevelCodexValue(
+            "model",
+            to: configuration.model,
+            in: lines
+        )
+        lines = settingTopLevelCodexValue(
+            "model_provider",
+            to: codexModelProviderID,
+            in: lines
+        )
+
+        while lines.last?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == true {
+            lines.removeLast()
+        }
+
+        if !lines.isEmpty {
+            lines.append("")
+        }
+        lines.append(contentsOf: codexProviderBlock(for: configuration))
+
+        return lines.joined(separator: "\n") + "\n"
+    }
+
+    private func removingCodexProviderBlock(from lines: [String]) -> [String] {
+        var result: [String] = []
+        var isSkippingManagedBlock = false
+
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            if isTableHeader(trimmed) {
+                isSkippingManagedBlock = trimmed == "[model_providers.\(codexModelProviderID)]" ||
+                    trimmed.hasPrefix("[model_providers.\(codexModelProviderID).")
+            }
+
+            if !isSkippingManagedBlock {
+                result.append(line)
+            }
+        }
+
+        return result
+    }
+
+    private func settingTopLevelCodexValue(_ key: String, to value: String, in lines: [String]) -> [String] {
+        let assignment = "\(key) = \"\(tomlEscape(value))\""
+        var result: [String] = []
+        var hasSetValue = false
+        var isInTable = false
+
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            if isTableHeader(trimmed) {
+                if !hasSetValue {
+                    result.append(assignment)
+                    hasSetValue = true
+                }
+                isInTable = true
+                result.append(line)
+                continue
+            }
+
+            if !isInTable && topLevelTOMLKey(in: trimmed) == key {
+                if !hasSetValue {
+                    result.append(assignment)
+                    hasSetValue = true
+                }
+                continue
+            }
+
+            result.append(line)
+        }
+
+        if !hasSetValue {
+            result.insert(assignment, at: insertionIndexForTopLevelCodexValues(in: result))
+        }
+
+        return result
+    }
+
+    private func codexProviderBlock(for configuration: AgentConfiguration) -> [String] {
+        var block = [
+            "[model_providers.\(codexModelProviderID)]",
+            "name = \"\(tomlEscape(configuration.codexProviderDisplayName))\""
+        ]
+
+        if let baseURL = configuration.baseURL.nilIfBlank {
+            block.append("base_url = \"\(tomlEscape(baseURL))\"")
+        }
+
+        block.append(contentsOf: [
+            "wire_api = \"responses\"",
+            "requires_openai_auth = true"
+        ])
+
+        return block
+    }
+
+    private func topLevelTOMLKey(in trimmedLine: String) -> String? {
+        guard !trimmedLine.isEmpty,
+              !trimmedLine.hasPrefix("#"),
+              let equalsIndex = trimmedLine.firstIndex(of: "=")
+        else { return nil }
+
+        return String(trimmedLine[..<equalsIndex]).trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func insertionIndexForTopLevelCodexValues(in lines: [String]) -> Int {
+        for (index, line) in lines.enumerated() {
+            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            if isTableHeader(trimmed) {
+                return index
+            }
+        }
+
+        return lines.count
+    }
+
+    private func isTableHeader(_ trimmedLine: String) -> Bool {
+        trimmedLine.hasPrefix("[") && trimmedLine.hasSuffix("]")
+    }
+
+    private var codexModelProviderID: String {
+        "agents-hub"
+    }
+}
+
+private struct AgentConfiguration: Sendable {
+    var provider: ProviderKind
+    var baseURL: String
+    var apiKey: String
+    var model: String
+    var codexProviderDisplayName: String
+    var claudeCodeModels: ClaudeCodeModelConfiguration
+
+    init(_ profile: APIProfile) {
+        provider = profile.provider
+        baseURL = profile.baseURL
+        apiKey = profile.apiKey
+        model = profile.model
+        codexProviderDisplayName = profile.codexProviderDisplayName
+        claudeCodeModels = profile.claudeCodeModels
     }
 }

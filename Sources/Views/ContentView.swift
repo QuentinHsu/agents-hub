@@ -3,6 +3,7 @@ import SwiftUI
 
 enum DetailRoute: Hashable {
     case profile(UUID)
+    case apiProvider(UUID)
 }
 
 struct ContentView: View {
@@ -28,6 +29,8 @@ struct ContentView: View {
                         switch route {
                         case .profile(let id):
                             ProfileDetailView(manager: manager, profileID: id)
+                        case .apiProvider(let id):
+                            APIProviderDetailView(manager: manager, apiProviderID: id)
                         }
                     }
             }
@@ -44,7 +47,7 @@ struct ContentView: View {
         .animation(.spring(response: 0.28, dampingFraction: 0.86), value: visibleFeedback)
         .onChange(of: sidebarSelection) { _, selection in
             switch selection {
-            case .overview, .settings, .about, .none:
+            case .overview, .apiProviders, .settings, .about, .none:
                 detailPath.removeAll()
             case .agent(let provider):
                 manager.selectedProvider = provider
@@ -80,6 +83,20 @@ struct ContentView: View {
                 }
             }
 
+            if isShowingAPIProviderList {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        manager.addAPIProvider()
+                        if let apiProviderID = manager.selectedAPIProviderID {
+                            detailPath = [.apiProvider(apiProviderID)]
+                        }
+                    } label: {
+                        L.label("ui.action.add_api_provider", systemImage: "plus", using: lm)
+                    }
+                    .help(L.string("ui.hint.add_api_provider", using: lm))
+                }
+            }
+
             if isEditingProfile {
                 ToolbarItemGroup(placement: .primaryAction) {
                     Button {
@@ -112,8 +129,31 @@ struct ContentView: View {
                         }
                     }
                     .keyboardShortcut(.return, modifiers: .command)
-                    .disabled(manager.selectedProfile?.isReady != true)
+                    .disabled(manager.selectedProfile.map { manager.isProfileReady($0) } != true)
                     .help(L.string("ui.hint.set_current_configuration", using: lm))
+                }
+            }
+
+            if isEditingAPIProvider {
+                ToolbarItemGroup(placement: .primaryAction) {
+                    Button {
+                        manager.duplicateSelectedAPIProvider()
+                        if let apiProviderID = manager.selectedAPIProviderID {
+                            detailPath = [.apiProvider(apiProviderID)]
+                        }
+                    } label: {
+                        L.label("ui.action.duplicate", systemImage: "doc.on.doc", using: lm)
+                    }
+                    .help(L.string("ui.hint.duplicate_api_provider", using: lm))
+
+                    Button {
+                        manager.removeSelectedAPIProvider()
+                        detailPath.removeAll()
+                    } label: {
+                        L.label("ui.action.delete", systemImage: "trash", using: lm)
+                    }
+                    .disabled(manager.apiProviders.count <= 1)
+                    .help(L.string("ui.hint.delete_api_provider", using: lm))
                 }
             }
         }
@@ -122,10 +162,12 @@ struct ContentView: View {
     @ViewBuilder
     private var detailRoot: some View {
         switch sidebarSelection {
+        case .apiProviders:
+            APIProvidersView(manager: manager, path: $detailPath)
         case .agent(let provider):
             AgentProfilesView(manager: manager, provider: provider, path: $detailPath)
         case .settings:
-            SettingsView()
+            SettingsView(manager: manager)
         case .about:
             AboutView(appUpdater: appUpdater)
         case .overview, .none:
@@ -141,7 +183,7 @@ struct ContentView: View {
         switch sidebarSelection {
         case .agent(let provider):
             provider
-        case .overview, .settings, .about, .none:
+        case .overview, .apiProviders, .settings, .about, .none:
             nil
         }
     }
@@ -154,17 +196,29 @@ struct ContentView: View {
         return false
     }
 
+    private var isEditingAPIProvider: Bool {
+        if case .apiProvider = detailPath.last {
+            return true
+        }
+
+        return false
+    }
+
     private var isOverview: Bool {
         switch sidebarSelection {
         case .overview, .none:
             true
-        case .agent, .settings, .about:
+        case .apiProviders, .agent, .settings, .about:
             false
         }
     }
 
     private var isShowingAgentList: Bool {
         currentProvider != nil && detailPath.isEmpty
+    }
+
+    private var isShowingAPIProviderList: Bool {
+        sidebarSelection == .apiProviders && detailPath.isEmpty
     }
 
     private var isSelectedProfileActive: Bool {

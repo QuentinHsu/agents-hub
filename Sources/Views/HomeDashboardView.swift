@@ -189,7 +189,8 @@ struct HomeDashboardView: View {
             return L.string("ui.label.no_current_configuration", using: lm)
         }
 
-        return "\(profile.name) · \(profile.displayModel)"
+        let resolvedProfile = manager.resolvedProfile(profile)
+        return "\(profile.name) · \(resolvedProfile.displayModel)"
     }
 
     private func refreshAll() async {
@@ -286,12 +287,5 @@ private struct FieldTitle: View {
                     .truncationMode(.middle)
             }
         }
-    }
-}
-
-private extension String {
-    var nilIfBlank: String? {
-        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : trimmed
     }
 }

@@ -4,11 +4,9 @@ struct ProfileDetailView: View {
     @Environment(LocalizationManager.self) private var lm
 
     private let formFieldWidth: CGFloat = 330
-    private let apiKeyFieldWidth: CGFloat = 286
 
     @Bindable var manager: ProfileManager
     var profileID: UUID?
-    @State private var revealKey = false
     @State private var draftProfile: APIProfile?
     @FocusState private var focusedField: ProfileField?
 
@@ -71,74 +69,29 @@ struct ProfileDetailView: View {
             SettingsDivider()
 
             SettingsRow {
-                FieldLabel(L.string("ui.profile.base_url", using: lm), detail: defaultURLText(for: profile.provider))
-            } trailing: {
-                TextField(L.string("ui.profile.base_url", using: lm), text: binding(for: \.baseURL))
-                    .textFieldStyle(.roundedBorder)
-                    .frame(width: formFieldWidth)
-                    .focused($focusedField, equals: .baseURL)
-            }
-
-            SettingsDivider()
-
-            SettingsRow {
                 FieldLabel(
-                    L.string("ui.profile.provider_website", using: lm),
-                    detail: L.string("ui.profile.provider_website_detail", using: lm)
+                    L.string("ui.profile.api_provider", using: lm),
+                    detail: L.string("ui.profile.api_provider_detail", using: lm)
                 )
             } trailing: {
-                HStack(spacing: 8) {
-                    TextField(
-                        L.string("ui.profile.provider_website_placeholder", using: lm),
-                        text: binding(for: \.providerWebsiteURL)
-                    )
-                    .textFieldStyle(.roundedBorder)
-                    .frame(width: apiKeyFieldWidth)
-                    .focused($focusedField, equals: .providerWebsiteURL)
-
-                    Button {
-                        openProviderWebsite()
-                    } label: {
-                        Image(systemName: "safari")
+                Picker("", selection: apiProviderBinding(for: profile)) {
+                    ForEach(manager.sortedAPIProviders()) { apiProvider in
+                        Text(apiProvider.name).tag(Optional(apiProvider.id))
                     }
-                    .buttonStyle(.borderless)
-                    .disabled(providerWebsiteURL(for: profile) == nil)
-                    .help(L.string("ui.hint.open_provider_website", using: lm))
                 }
+                .labelsHidden()
                 .frame(width: formFieldWidth, alignment: .leading)
             }
 
             SettingsDivider()
 
-            SettingsRow {
-                FieldLabel(
-                    L.string("ui.profile.api_key", using: lm),
-                    detail: L.string("ui.profile.api_key_detail", using: lm)
-                )
-            } trailing: {
-                HStack(spacing: 8) {
-                    Group {
-                        if revealKey {
-                            TextField(L.string("ui.profile.api_key", using: lm), text: binding(for: \.apiKey))
-                                .focused($focusedField, equals: .apiKey)
-                        } else {
-                            SecureField(L.string("ui.profile.api_key", using: lm), text: binding(for: \.apiKey))
-                                .focused($focusedField, equals: .apiKey)
-                        }
-                    }
-                    .textFieldStyle(.roundedBorder)
-                    .frame(width: apiKeyFieldWidth)
+            if let apiProvider = manager.apiProvider(for: profile), apiProvider.keys.count > 1 {
+                apiProviderKeyPicker(for: profile, apiProvider: apiProvider)
 
-                    Button {
-                        revealKey.toggle()
-                    } label: {
-                        Image(systemName: revealKey ? "eye.slash" : "eye")
-                    }
-                    .buttonStyle(.borderless)
-                    .help(revealKey ? L.string("ui.hint.hide_api_key", using: lm) : L.string("ui.hint.show_api_key", using: lm))
-                }
-                .frame(width: formFieldWidth, alignment: .leading)
+                SettingsDivider()
             }
+
+            apiProviderSummary(for: profile)
 
             SettingsDivider()
 
@@ -162,6 +115,50 @@ struct ProfileDetailView: View {
             }
         }
         .settingsCard()
+    }
+
+    private func apiProviderSummary(for profile: APIProfile) -> some View {
+        let apiProvider = manager.apiProvider(for: profile)
+        let key = manager.apiProviderKey(for: profile)
+
+        return SettingsRow {
+            FieldLabel(
+                L.string("ui.profile.api_provider_data", using: lm),
+                detail: providerKeySummary(apiProvider: apiProvider, key: key)
+            )
+        } trailing: {
+            VStack(alignment: .trailing, spacing: 3) {
+                Text(apiProvider?.baseURL.nilIfBlank ?? L.string("ui.label.no_base_url", using: lm))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+
+                Text(key?.redactedKey ?? L.string("ui.label.no_key", using: lm))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+            .frame(width: formFieldWidth, alignment: .trailing)
+        }
+    }
+
+    private func apiProviderKeyPicker(for profile: APIProfile, apiProvider: APIProvider) -> some View {
+        SettingsRow {
+            FieldLabel(
+                L.string("ui.profile.api_provider_key", using: lm),
+                detail: L.string("ui.profile.api_provider_key_detail", using: lm)
+            )
+        } trailing: {
+            Picker("", selection: apiProviderKeyBinding(for: profile, apiProvider: apiProvider)) {
+                ForEach(apiProvider.keys) { key in
+                    Text(key.name).tag(Optional(key.id))
+                }
+            }
+            .labelsHidden()
+            .frame(width: formFieldWidth, alignment: .leading)
+        }
     }
 
     private func codexProviderNameModeField() -> some View {
@@ -240,6 +237,15 @@ struct ProfileDetailView: View {
         }
     }
 
+    private func modelDetail(for provider: ProviderKind) -> String {
+        switch provider {
+        case .claudeCode:
+            L.string("ui.profile.model_detail_claude", using: lm)
+        case .codex:
+            L.string("ui.profile.model_detail_codex", using: lm)
+        }
+    }
+
     private func codexProviderNameModeBinding() -> Binding<CodexProviderNameMode> {
         Binding {
             draftProfile?.codexProviderNameMode ?? profile?.codexProviderNameMode ?? .agentsHub
@@ -247,19 +253,6 @@ struct ProfileDetailView: View {
             ensureDraftProfile()
             draftProfile?.codexProviderNameMode = newValue
             commitDraftProfile()
-        }
-    }
-
-    private func defaultURLText(for provider: ProviderKind) -> String {
-        L.string("ui.profile.default_url", provider.defaultBaseURL, using: lm)
-    }
-
-    private func modelDetail(for provider: ProviderKind) -> String {
-        switch provider {
-        case .claudeCode:
-            L.string("ui.profile.model_detail_claude", using: lm)
-        case .codex:
-            L.string("ui.profile.model_detail_codex", using: lm)
         }
     }
 
@@ -272,26 +265,37 @@ struct ProfileDetailView: View {
         }
     }
 
-    private func openProviderWebsite() {
-        guard let profile,
-              let url = providerWebsiteURL(for: profile)
-        else { return }
-
-        NSWorkspace.shared.open(url)
+    private func apiProviderBinding(for profile: APIProfile) -> Binding<UUID?> {
+        Binding {
+            draftProfile?.apiProviderID ?? profile.apiProviderID ?? manager.apiProvider(for: profile)?.id
+        } set: { newValue in
+            ensureDraftProfile()
+            draftProfile?.apiProviderID = newValue
+            if let newValue,
+               let apiProvider = manager.apiProviders.first(where: { $0.id == newValue })
+            {
+                draftProfile?.apiProviderKeyID = apiProvider.keys.first?.id
+            } else {
+                draftProfile?.apiProviderKeyID = nil
+            }
+            commitDraftProfile()
+        }
     }
 
-    private func providerWebsiteURL(for profile: APIProfile) -> URL? {
-        let trimmed = profile.providerWebsiteURL.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return nil }
+    private func apiProviderKeyBinding(for profile: APIProfile, apiProvider: APIProvider) -> Binding<UUID?> {
+        Binding {
+            draftProfile?.apiProviderKeyID ?? profile.apiProviderKeyID ?? apiProvider.keys.first?.id
+        } set: { newValue in
+            ensureDraftProfile()
+            draftProfile?.apiProviderKeyID = newValue
+            commitDraftProfile()
+        }
+    }
 
-        let candidate = trimmed.contains("://") ? trimmed : "https://\(trimmed)"
-        guard let url = URL(string: candidate),
-              let scheme = url.scheme?.lowercased(),
-              ["http", "https"].contains(scheme),
-              url.host?.isEmpty == false
-        else { return nil }
-
-        return url
+    private func providerKeySummary(apiProvider: APIProvider?, key: APIProviderKey?) -> String {
+        guard let apiProvider else { return L.string("ui.api_provider.no_provider", using: lm) }
+        guard apiProvider.keys.count > 1, let key else { return apiProvider.name }
+        return "\(apiProvider.name) · \(key.name)"
     }
 
     private func selectRoutedProfile() {
@@ -316,9 +320,8 @@ struct ProfileDetailView: View {
 
         manager.updateProfile(id: draftProfile.id) { profile in
             profile.name = draftProfile.name
-            profile.baseURL = draftProfile.baseURL
-            profile.providerWebsiteURL = draftProfile.providerWebsiteURL
-            profile.apiKey = draftProfile.apiKey
+            profile.apiProviderID = draftProfile.apiProviderID
+            profile.apiProviderKeyID = draftProfile.apiProviderKeyID
             profile.model = draftProfile.model
             profile.codexProviderNameMode = draftProfile.codexProviderNameMode
             profile.claudeCodeModels = draftProfile.claudeCodeModels
@@ -329,9 +332,6 @@ struct ProfileDetailView: View {
 
 private enum ProfileField: Hashable {
     case name
-    case baseURL
-    case providerWebsiteURL
-    case apiKey
     case model
     case defaultOpusModel
     case defaultSonnetModel

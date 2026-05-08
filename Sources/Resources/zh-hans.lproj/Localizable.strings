@@ -5,6 +5,9 @@
 "ui.settings.language" = "语言";
 "ui.settings.storage" = "存储";
 "ui.settings.config_path" = "配置路径";
+"ui.settings.reset_data" = "重置数据";
+"ui.settings.reset_data_detail" = "恢复开发用的默认供应商和智能体配置。";
+"ui.settings.reset_data_confirm" = "重置";
 "ui.settings.about_subtitle" = "管理 Claude Code 与 Codex API 配置，并将它们应用到本地 CLI 配置文件。";
 "ui.settings.version" = "版本";
 "ui.settings.source_repository" = "源码仓库";
@@ -18,6 +21,8 @@
 "ui.action.set_current" = "设为当前";
 "ui.action.refresh" = "刷新";
 "ui.action.reveal_in_finder" = "在 Finder 中显示";
+"ui.action.add_api_provider" = "添加供应商";
+"ui.action.cancel" = "取消";
 
 /* Common labels */
 "ui.label.active" = "已启用";
@@ -32,6 +37,7 @@
 
 /* Sidebar */
 "ui.sidebar.overview" = "概览";
+"ui.sidebar.api_providers" = "供应商";
 "ui.sidebar.settings" = "设置";
 "ui.sidebar.about" = "关于";
 
@@ -40,6 +46,11 @@
 "ui.hint.duplicate_configuration" = "复制选中的配置";
 "ui.hint.delete_configuration" = "删除选中的配置";
 "ui.hint.set_current_configuration" = "将选中的配置设为当前配置";
+"ui.hint.add_api_provider" = "添加 API 供应商";
+"ui.hint.duplicate_api_provider" = "复制选中的 API 供应商";
+"ui.hint.delete_api_provider" = "删除选中的 API 供应商";
+"ui.hint.add_api_provider_key" = "添加具名 API Key";
+"ui.hint.delete_api_provider_key" = "删除这个 API Key";
 
 /* Dashboard */
 "ui.dashboard.agent_status" = "智能体状态";
@@ -52,11 +63,31 @@
 "ui.hint.add_configuration_for_agent" = "为 %@ 添加配置";
 "ui.agent_profiles.shared_settings" = "设置";
 
+/* API providers */
+"ui.api_providers.title" = "供应商";
+"ui.api_providers.saved_count" = "已保存 %lld 个";
+"ui.api_provider.no_provider" = "无供应商";
+"ui.api_provider.name" = "供应商名称";
+"ui.api_provider.name_detail" = "在为智能体配置选择供应商时使用";
+"ui.api_provider.name_placeholder" = "供应商名称";
+"ui.api_provider.base_url_detail" = "此供应商下所有 Key 共用";
+"ui.api_provider.keys" = "Key";
+"ui.api_provider.keys_detail" = "具名 Key 可让一个供应商使用不同渠道";
+"ui.api_provider.keys_count" = "%lld 个 Key";
+"ui.api_provider.key_name" = "Key 名称";
+"ui.api_provider.key_name_placeholder" = "渠道名称";
+"ui.api_provider.key_api_key_detail" = "保存在此供应商中，并被智能体配置复用";
+
 /* Profile detail */
 "ui.profile.no_profile" = "无配置";
 "ui.profile.profile_name" = "配置名称";
 "ui.profile.profile_name_detail" = "仅在 Agents Hub 中使用";
 "ui.profile.name_placeholder" = "名称";
+"ui.profile.api_provider" = "API 供应商";
+"ui.profile.api_provider_detail" = "Base URL 和官网来自所选供应商";
+"ui.profile.api_provider_key" = "供应商 Key";
+"ui.profile.api_provider_key_detail" = "选择此配置使用哪个具名 Key/渠道";
+"ui.profile.api_provider_data" = "供应商数据";
 "ui.profile.base_url" = "Base URL";
 "ui.profile.provider_website" = "供应商官网";
 "ui.profile.provider_website_detail" = "此供应商的官方网站";
@@ -94,11 +125,16 @@
 "status.profile_saved" = "%@ 已保存。";
 "status.profile_saved_and_applied" = "%@ 已保存并应用到 %@。";
 "status.profile_applied" = "%@ 已应用到 %@。";
+"status.api_provider_saved" = "%@ 供应商已保存。";
 "status.claude_onboarding_updated" = "Claude 初始引导状态已更新。";
+"status.state_reset" = "Agents Hub 数据已重置。";
 
 /* Defaults */
 "profile.default_name" = "%@ 配置 %lld";
 "profile.copy_name" = "%@ 副本";
+"api_provider.default_name" = "供应商 %lld";
+"api_provider.default_provider_name" = "默认供应商";
+"api_provider.key_default_name" = "Key %lld";
 
 /* Errors */
 "error.invalid_url" = "无效 URL";

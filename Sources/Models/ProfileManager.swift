@@ -5,6 +5,11 @@ import Observation
 @Observable
 final class ProfileManager {
     var profiles: [APIProfile]
+    var apiProviders: [APIProvider] {
+        didSet {
+            rebuildIndexes()
+        }
+    }
     var skipClaudeCodeOnboarding: Bool
     var selectedProvider: ProviderKind = .claudeCode {
         didSet {
@@ -12,6 +17,7 @@ final class ProfileManager {
         }
     }
     var selectedProfileIDs: [ProviderKind: UUID] = [:]
+    var selectedAPIProviderID: UUID?
     private(set) var feedbackRevision = 0
     var statusMessage: String? {
         didSet {
@@ -28,6 +34,9 @@ final class ProfileManager {
         }
     }
 
+    private var apiProvidersByID: [UUID: APIProvider] = [:]
+    private var keysByID: [UUID: APIProviderKey] = [:]
+
     private let store: ProfileStore
     private let writer: ConfigurationWriter
 
@@ -36,13 +45,25 @@ final class ProfileManager {
         self.writer = writer
         let state = store.load()
         self.profiles = state.profiles
+        self.apiProviders = state.apiProviders
         self.skipClaudeCodeOnboarding = state.skipClaudeCodeOnboarding
 
-        ensureDefaultProfiles()
+        rebuildIndexes()
+        ensureDefaults()
         selectedProvider = profiles.first(where: \.isActive)?.provider ?? .claudeCode
         for provider in ProviderKind.allCases {
             ensureSelection(for: provider)
         }
+        ensureProviderSelection()
+    }
+
+    private func rebuildIndexes() {
+        apiProvidersByID = Dictionary(uniqueKeysWithValues: apiProviders.map { ($0.id, $0) })
+        keysByID = Dictionary(
+            uniqueKeysWithValues: apiProviders.flatMap { provider in
+                provider.keys.map { ($0.id, $0) }
+            }
+        )
     }
 
     var selectedProfile: APIProfile? {
@@ -59,7 +80,8 @@ final class ProfileManager {
     }
 
     func activeProfile(for provider: ProviderKind) -> APIProfile? {
-        profiles.first { $0.provider == provider && $0.isActive }
+        guard let profile = profiles.first(where: { $0.provider == provider && $0.isActive }) else { return nil }
+        return resolvedProfile(profile)
     }
 
     func selectedProfile(for provider: ProviderKind) -> APIProfile? {
@@ -68,9 +90,55 @@ final class ProfileManager {
         return profiles.first { $0.id == selectedID && $0.provider == provider }
     }
 
+    func isProfileReady(_ profile: APIProfile) -> Bool {
+        resolvedProfile(profile).isReady
+    }
+
     func selectProfile(_ profile: APIProfile) {
         selectedProvider = profile.provider
         selectedProfileIDs[profile.provider] = profile.id
+    }
+
+    func sortedAPIProviders() -> [APIProvider] {
+        apiProviders
+            .sorted { lhs, rhs in
+                lhs.updatedAt > rhs.updatedAt
+            }
+    }
+
+    func selectedAPIProvider() -> APIProvider? {
+        ensureProviderSelection()
+        guard let selectedAPIProviderID else { return nil }
+        return apiProvidersByID[selectedAPIProviderID]
+    }
+
+    func apiProvider(for profile: APIProfile) -> APIProvider? {
+        if let apiProviderID = profile.apiProviderID,
+           let apiProvider = apiProvidersByID[apiProviderID]
+        {
+            return apiProvider
+        }
+
+        return sortedAPIProviders().first
+    }
+
+    func apiProviderKey(for profile: APIProfile) -> APIProviderKey? {
+        guard let apiProvider = apiProvider(for: profile) else { return nil }
+        if let keyID = profile.apiProviderKeyID,
+           let key = keysByID[keyID]
+        {
+            return key
+        }
+
+        return apiProvider.keys.first
+    }
+
+    func resolvedProfile(_ profile: APIProfile) -> APIProfile {
+        profile.resolved(with: apiProvider(for: profile), key: apiProviderKey(for: profile))
+    }
+
+    func selectAPIProvider(_ apiProvider: APIProvider) {
+        selectedAPIProviderID = apiProvider.id
     }
 
     func updateSelectedProfile(_ update: (inout APIProfile) -> Void) {
@@ -88,7 +156,7 @@ final class ProfileManager {
 
         if updatedProfile.isActive {
             do {
-                try writer.apply(updatedProfile)
+                try writer.apply(resolvedProfile(updatedProfile))
                 statusMessage = String(
                     format: LocalizationManager.localize("status.profile_saved_and_applied"),
                     updatedProfile.name,
@@ -118,9 +186,13 @@ final class ProfileManager {
 
     func addProfile(for provider: ProviderKind? = nil) {
         let provider = provider ?? selectedProvider
+        ensureProviderSelection()
+        let selectedAPIProvider = selectedAPIProvider()
         let count = profiles.filter { $0.provider == provider }.count + 1
         let profile = APIProfile(
             provider: provider,
+            apiProviderID: selectedAPIProvider?.id,
+            apiProviderKeyID: selectedAPIProvider?.keys.first?.id,
             name: String(
                 format: LocalizationManager.localize("profile.default_name"),
                 provider.shortName,
@@ -171,7 +243,7 @@ final class ProfileManager {
         guard let selectedProfile else { return }
 
         do {
-            try writer.apply(selectedProfile)
+            try writer.apply(resolvedProfile(selectedProfile))
             for index in profiles.indices {
                 if profiles[index].provider == selectedProfile.provider {
                     profiles[index].isActive = profiles[index].id == selectedProfile.id
@@ -189,6 +261,125 @@ final class ProfileManager {
         }
     }
 
+    func addAPIProvider() {
+        let count = apiProviders.count + 1
+        let apiProvider = APIProvider(
+            name: String(
+                format: LocalizationManager.localize("api_provider.default_name"),
+                Int64(count)
+            )
+        )
+        apiProviders.append(apiProvider)
+        selectedAPIProviderID = apiProvider.id
+        statusMessage = nil
+        errorMessage = nil
+        save()
+    }
+
+    func duplicateSelectedAPIProvider() {
+        guard var apiProvider = selectedAPIProvider() else { return }
+        apiProvider.id = UUID()
+        apiProvider.keys = apiProvider.keys.map { key in
+            var key = key
+            key.id = UUID()
+            return key
+        }
+        apiProvider.name = String(
+            format: LocalizationManager.localize("profile.copy_name"),
+            apiProvider.name
+        )
+        apiProvider.updatedAt = .now
+        apiProviders.append(apiProvider)
+        selectedAPIProviderID = apiProvider.id
+        statusMessage = nil
+        errorMessage = nil
+        save()
+    }
+
+    func removeSelectedAPIProvider() {
+        guard apiProviders.count > 1,
+              let selectedID = selectedAPIProviderID
+        else { return }
+
+        apiProviders.removeAll { $0.id == selectedID }
+        selectedAPIProviderID = nil
+        ensureProviderSelection()
+        let fallbackProvider = selectedAPIProvider()
+        for index in profiles.indices where profiles[index].apiProviderID == selectedID {
+            profiles[index].apiProviderID = fallbackProvider?.id
+            profiles[index].apiProviderKeyID = fallbackProvider?.keys.first?.id
+            profiles[index].updatedAt = .now
+        }
+        statusMessage = nil
+        errorMessage = nil
+        save()
+    }
+
+    func updateAPIProvider(id: UUID, _ update: (inout APIProvider) -> Void) {
+        guard let index = apiProviders.firstIndex(where: { $0.id == id }) else { return }
+
+        selectedAPIProviderID = id
+        var updatedProvider = apiProviders[index]
+        update(&updatedProvider)
+        if updatedProvider.keys.isEmpty {
+            updatedProvider.keys = [APIProviderKey(name: "Default")]
+        }
+        guard updatedProvider != apiProviders[index] else { return }
+
+        updatedProvider.updatedAt = .now
+        apiProviders[index] = updatedProvider
+        statusMessage = String(
+            format: LocalizationManager.localize("status.api_provider_saved"),
+            updatedProvider.name
+        )
+        errorMessage = nil
+
+        for profile in profiles where profile.apiProviderID == id && profile.isActive {
+            do {
+                try writer.apply(resolvedProfile(profile))
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+        }
+
+        save()
+    }
+
+    func addKey(to apiProviderID: UUID) {
+        guard let index = apiProviders.firstIndex(where: { $0.id == apiProviderID }) else { return }
+
+        let count = apiProviders[index].keys.count + 1
+        apiProviders[index].keys.append(APIProviderKey(
+            name: String(
+                format: LocalizationManager.localize("api_provider.key_default_name"),
+                Int64(count)
+            )
+        ))
+        apiProviders[index].updatedAt = .now
+        selectedAPIProviderID = apiProviderID
+        statusMessage = nil
+        errorMessage = nil
+        save()
+    }
+
+    func removeKey(_ keyID: UUID, from apiProviderID: UUID) {
+        guard let providerIndex = apiProviders.firstIndex(where: { $0.id == apiProviderID }),
+              apiProviders[providerIndex].keys.count > 1
+        else { return }
+
+        apiProviders[providerIndex].keys.removeAll { $0.id == keyID }
+        apiProviders[providerIndex].updatedAt = .now
+        let fallbackKeyID = apiProviders[providerIndex].keys.first?.id
+        for index in profiles.indices where profiles[index].apiProviderID == apiProviderID && profiles[index].apiProviderKeyID == keyID {
+            profiles[index].apiProviderKeyID = fallbackKeyID
+            profiles[index].updatedAt = .now
+        }
+        selectedAPIProviderID = apiProviderID
+        statusMessage = nil
+        errorMessage = nil
+        save()
+    }
+
     func updateSkipClaudeCodeOnboarding(_ enabled: Bool) {
         guard skipClaudeCodeOnboarding != enabled else { return }
 
@@ -203,11 +394,84 @@ final class ProfileManager {
         save()
     }
 
-    private func ensureDefaultProfiles() {
+    func resetState() {
+        let state = AgentsHubState.empty
+        profiles = state.profiles
+        apiProviders = state.apiProviders
+        skipClaudeCodeOnboarding = state.skipClaudeCodeOnboarding
+        selectedProvider = .claudeCode
+        selectedProfileIDs.removeAll()
+        selectedAPIProviderID = nil
+
+        for provider in ProviderKind.allCases {
+            ensureSelection(for: provider)
+        }
+        ensureProviderSelection()
+
+        statusMessage = LocalizationManager.localize("status.state_reset")
+        errorMessage = nil
+        save()
+    }
+
+    private func ensureDefaults() {
         var changed = false
 
+        if apiProviders.isEmpty {
+            let legacyProfile = profiles.first { $0.baseURL.nilIfBlank != nil }
+            let baseURL = legacyProfile?.baseURL ?? ProviderKind.codex.defaultBaseURL
+            let keys: [APIProviderKey]? = legacyProfile?.apiKey.nilIfBlank.map { [APIProviderKey(name: "Default", apiKey: $0)] }
+
+            apiProviders.append(APIProvider(
+                name: LocalizationManager.localize("api_provider.default_provider_name"),
+                baseURL: baseURL,
+                keys: keys ?? [APIProviderKey(name: "Default")]
+            ))
+            changed = true
+        }
+
+        for index in apiProviders.indices {
+            let provider = apiProviders[index]
+            let needsBaseURL = provider.baseURL.nilIfBlank == nil
+            let needsKey = !provider.keys.contains { $0.isReady }
+
+            guard needsBaseURL || needsKey else { continue }
+
+            if let donorProfile = profiles.first(where: { $0.apiProviderID == provider.id && $0.baseURL.nilIfBlank != nil })
+                ?? profiles.first(where: { $0.baseURL.nilIfBlank != nil })
+            {
+                if needsBaseURL {
+                    apiProviders[index].baseURL = donorProfile.baseURL
+                }
+                if needsKey, let donorKey = donorProfile.apiKey.nilIfBlank {
+                    if let firstKeyIndex = apiProviders[index].keys.firstIndex(where: { !$0.isReady }) {
+                        apiProviders[index].keys[firstKeyIndex].apiKey = donorKey
+                    } else {
+                        apiProviders[index].keys.append(APIProviderKey(name: "Default", apiKey: donorKey))
+                    }
+                }
+                apiProviders[index].updatedAt = .now
+                changed = true
+            }
+        }
+
         for provider in ProviderKind.allCases where !profiles.contains(where: { $0.provider == provider }) {
-            profiles.append(APIProfile(provider: provider, name: provider.displayName))
+            profiles.append(APIProfile(
+                provider: provider,
+                apiProviderID: apiProviders.first?.id,
+                apiProviderKeyID: apiProviders.first?.keys.first?.id,
+                name: provider.displayName
+            ))
+            changed = true
+        }
+
+        for index in profiles.indices where profiles[index].apiProviderID == nil {
+            profiles[index].apiProviderID = apiProviders.first?.id
+            profiles[index].apiProviderKeyID = apiProviders.first?.keys.first?.id
+            changed = true
+        }
+
+        for index in profiles.indices where profiles[index].apiProviderKeyID == nil {
+            profiles[index].apiProviderKeyID = apiProvider(for: profiles[index])?.keys.first?.id
             changed = true
         }
 
@@ -232,10 +496,26 @@ final class ProfileManager {
         selectedProfileIDs[provider] = providerProfiles.first(where: \.isActive)?.id ?? providerProfiles.first?.id
     }
 
+    private func ensureProviderSelection() {
+        guard !apiProviders.isEmpty else {
+            selectedAPIProviderID = nil
+            return
+        }
+
+        if let selectedAPIProviderID,
+           apiProviders.contains(where: { $0.id == selectedAPIProviderID })
+        {
+            return
+        }
+
+        selectedAPIProviderID = sortedAPIProviders().first?.id
+    }
+
     private func save() {
         do {
             try store.save(AgentsHubState(
                 profiles: profiles,
+                apiProviders: apiProviders,
                 skipClaudeCodeOnboarding: skipClaudeCodeOnboarding
             ))
         } catch {

@@ -56,7 +56,7 @@ Claude Code profiles are written to `~/.claude/settings.json`.
 | Field | Written value |
 | --- | --- |
 | `settings.model` | selected profile model |
-| `env.ANTHROPIC_API_KEY` | selected profile API key |
+| `env.ANTHROPIC_AUTH_TOKEN` | selected profile API key |
 | `env.ANTHROPIC_BASE_URL` | selected profile base URL |
 | `env.ANTHROPIC_MODEL` | selected profile model |
 | `env.ANTHROPIC_DEFAULT_OPUS_MODEL` | default Opus model |
@@ -74,7 +74,7 @@ Codex profiles are written to `~/.codex/config.toml` and `~/.codex/auth.json`.
 | `~/.codex/config.toml` | selected model and `model_providers.agents-hub` provider settings |
 | `~/.codex/auth.json` | `OPENAI_API_KEY` from the selected profile |
 
-Agents Hub writes Codex profiles with `wire_api = "responses"` and `requires_openai_auth = true`. The provider display name can be either `Agents Hub` or the selected profile name.
+Agents Hub writes Codex profiles with `wire_api = "responses"` and `requires_openai_auth = true`. The managed Codex provider ID is always `model_providers.agents-hub`; its display name can be either `Agents Hub` or the selected profile name.
 
 ## Check Local Status
 
