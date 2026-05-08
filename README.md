@@ -141,12 +141,6 @@ Install the built app into `/Applications`:
 make install
 ```
 
-The `app` and `install` targets use `Scripts/build.sh` from `../../open-source/workflow/release-kits/macos/swiftpm-sparkle` by default. Override `RELEASE_KIT_DIR` if that release kit lives somewhere else:
-
-```sh
-make app RELEASE_KIT_DIR=/path/to/swiftpm-sparkle
-```
-
 ## Star History
 
 [![Star History Chart](https://starchart.cc/QuentinHsu/agents-hub.svg?variant=adaptive)](https://starchart.cc/QuentinHsu/agents-hub)

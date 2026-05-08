@@ -6,10 +6,16 @@ RELEASE_DIR  := $(BUILD_DIR)/release
 APP_BUNDLE   := $(BUILD_DIR)/$(DISPLAY_NAME).app
 DMG_FILE     := $(BUILD_DIR)/$(DISPLAY_NAME).dmg
 INSTALL_DIR  := /Applications
-RELEASE_KIT_DIR ?= ../../open-source/workflow/release-kits/macos/swiftpm-sparkle
+WORKFLOW_REPO ?= https://github.com/QuentinHsu/workflow.git
+WORKFLOW_REF  ?= main
+WORKFLOW_CACHE_DIR := $(BUILD_DIR)/workflow
+WORKFLOW_SOURCE := $(WORKFLOW_REPO)#$(WORKFLOW_REF)
+WORKFLOW_SOURCE_FILE := $(WORKFLOW_CACHE_DIR)/.release-kit-source
+DEFAULT_RELEASE_KIT_DIR := $(WORKFLOW_CACHE_DIR)/release-kits/macos/swiftpm-sparkle
+RELEASE_KIT_DIR ?= $(DEFAULT_RELEASE_KIT_DIR)
 RELEASE_KIT_BUILD := $(RELEASE_KIT_DIR)/Scripts/build.sh
 
-.PHONY: build clean app dmg install uninstall run
+.PHONY: build clean app dmg install uninstall run prepare-release-kit
 
 # ─── Development ──────────────────────────────────────────────
 
@@ -23,9 +29,25 @@ clean:
 	swift package clean
 	rm -rf "$(APP_BUNDLE)" "$(DMG_FILE)" dist
 
+# ─── Release Kit ──────────────────────────────────────────────
+
+prepare-release-kit:
+	@if [ "$(RELEASE_KIT_DIR)" != "$(DEFAULT_RELEASE_KIT_DIR)" ]; then \
+		if [ ! -x "$(RELEASE_KIT_BUILD)" ]; then \
+			echo "✗ Release kit build script not found: $(RELEASE_KIT_BUILD)"; \
+			exit 1; \
+		fi; \
+	elif [ ! -x "$(RELEASE_KIT_BUILD)" ] || [ "$$(cat "$(WORKFLOW_SOURCE_FILE)" 2>/dev/null)" != "$(WORKFLOW_SOURCE)" ]; then \
+		echo "▸ Fetching release kit from $(WORKFLOW_REPO) ($(WORKFLOW_REF))..."; \
+		rm -rf "$(WORKFLOW_CACHE_DIR)"; \
+		git clone --depth 1 --filter=blob:none --sparse --branch "$(WORKFLOW_REF)" "$(WORKFLOW_REPO)" "$(WORKFLOW_CACHE_DIR)"; \
+		git -C "$(WORKFLOW_CACHE_DIR)" sparse-checkout set release-kits/macos/swiftpm-sparkle; \
+		echo "$(WORKFLOW_SOURCE)" > "$(WORKFLOW_SOURCE_FILE)"; \
+	fi
+
 # ─── App Bundle ───────────────────────────────────────────────
 
-app:
+app: prepare-release-kit
 	@APP_PROJECT_DIR="$(CURDIR)" \
 	 APP_TARGET_NAME="$(TARGET_NAME)" \
 	 APP_DISPLAY_NAME="$(DISPLAY_NAME)" \
@@ -38,7 +60,7 @@ app:
 
 # ─── DMG ──────────────────────────────────────────────────────
 
-dmg:
+dmg: prepare-release-kit
 	@APP_PROJECT_DIR="$(CURDIR)" \
 	 APP_TARGET_NAME="$(TARGET_NAME)" \
 	 APP_DISPLAY_NAME="$(DISPLAY_NAME)" \

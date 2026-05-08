@@ -141,12 +141,6 @@ make dmg
 make install
 ```
 
-`app` 和 `install` target 默认使用 `../../open-source/workflow/release-kits/macos/swiftpm-sparkle` 下的 `Scripts/build.sh`。如果 release kit 位于其他路径，可以覆盖 `RELEASE_KIT_DIR`：
-
-```sh
-make app RELEASE_KIT_DIR=/path/to/swiftpm-sparkle
-```
-
 ## Star 历史
 
 [![Star History Chart](https://starchart.cc/QuentinHsu/agents-hub.svg?variant=adaptive)](https://starchart.cc/QuentinHsu/agents-hub)
