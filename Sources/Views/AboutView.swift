@@ -14,7 +14,7 @@ struct AboutView: View {
                     AboutRowTitle(L.string("ui.settings.version", using: lm))
                 } trailing: {
                     Text(AppInfo.versionDisplay)
-                        .font(.subheadline.weight(.medium))
+                        .font(.caption.weight(.medium))
                         .foregroundStyle(.secondary)
                 }
 
@@ -27,7 +27,7 @@ struct AboutView: View {
                         AppInfo.sourceRepository.absoluteString,
                         destination: AppInfo.sourceRepository
                     )
-                    .font(.subheadline)
+                    .font(.caption)
                 }
 
                 SettingsDivider()
@@ -40,7 +40,8 @@ struct AboutView: View {
                     } label: {
                         Label(L.string("ui.app.check_for_updates", using: lm), systemImage: "arrow.down.circle")
                     }
-                    .font(.subheadline)
+                    .font(.caption)
+                    .controlSize(.small)
                 }
             }
             .settingsCard()
@@ -57,10 +58,10 @@ struct AboutView: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(AppInfo.displayName)
-                    .font(.headline.weight(.semibold))
+                    .font(.subheadline.weight(.semibold))
 
                 L.text("ui.settings.about_subtitle", using: lm)
-                    .font(.caption)
+                    .font(.caption2)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -80,7 +81,7 @@ private struct AboutRowTitle: View {
 
     var body: some View {
         Text(title)
-            .font(.subheadline.weight(.medium))
+            .font(.caption.weight(.medium))
     }
 }
 
