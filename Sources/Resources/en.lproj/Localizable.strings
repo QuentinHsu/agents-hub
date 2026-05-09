@@ -137,5 +137,17 @@
 "api_provider.default_provider_name" = "Default Provider";
 "api_provider.key_default_name" = "Key %lld";
 
+/* Sessions */
+"ui.sessions.title" = "Sessions";
+"ui.sessions.count" = "%lld sessions";
+"ui.sessions.loading" = "Loading sessions...";
+"ui.sessions.empty" = "No sessions found";
+"ui.sessions.message_count" = "%lld msgs";
+"ui.sessions.copy_resume_command" = "Copy Resume Command";
+"ui.sessions.delete" = "Delete Session";
+"ui.sessions.delete_confirmation" = "Delete this session?";
+"ui.sessions.delete_confirmation_detail" = "This removes the local session file and cannot be undone.";
+"ui.sessions.unknown_project" = "Unknown Project";
+
 /* Errors */
 "error.invalid_url" = "Invalid URL";

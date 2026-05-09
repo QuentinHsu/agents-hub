@@ -17,4 +17,13 @@ enum AppPaths {
 
     static let codexAuthURL = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent(".codex/auth.json")
+
+    static let claudeProjectsDirectory = FileManager.default.homeDirectoryForCurrentUser
+        .appendingPathComponent(".claude/projects", isDirectory: true)
+
+    static let codexSessionsDirectory = FileManager.default.homeDirectoryForCurrentUser
+        .appendingPathComponent(".codex/sessions", isDirectory: true)
+
+    static let codexDirectory = FileManager.default.homeDirectoryForCurrentUser
+        .appendingPathComponent(".codex", isDirectory: true)
 }

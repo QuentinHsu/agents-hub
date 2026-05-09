@@ -6,6 +6,14 @@ struct AgentProfilesView: View {
     @Bindable var manager: ProfileManager
     let provider: ProviderKind
     @Binding var path: [DetailRoute]
+    @State private var sessionManager: SessionManager
+
+    init(manager: ProfileManager, provider: ProviderKind, path: Binding<[DetailRoute]>) {
+        self.manager = manager
+        self.provider = provider
+        self._path = path
+        self._sessionManager = State(initialValue: SessionManager(provider: provider))
+    }
 
     var body: some View {
         SettingsPageContent {
@@ -13,9 +21,13 @@ struct AgentProfilesView: View {
                 claudeSharedSettings
             }
             profilesList
+            AgentSessionsView(sessionManager: sessionManager, provider: provider)
             targetFiles
         }
         .navigationTitle(provider.displayName)
+        .task {
+            await sessionManager.loadSessions()
+        }
     }
 
     private var sortedProfiles: [APIProfile] {

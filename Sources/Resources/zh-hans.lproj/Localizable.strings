@@ -137,5 +137,17 @@
 "api_provider.default_provider_name" = "默认供应商";
 "api_provider.key_default_name" = "Key %lld";
 
+/* Sessions */
+"ui.sessions.title" = "会话";
+"ui.sessions.count" = "%lld 个会话";
+"ui.sessions.loading" = "加载会话中...";
+"ui.sessions.empty" = "暂无会话";
+"ui.sessions.message_count" = "%lld 条消息";
+"ui.sessions.copy_resume_command" = "复制恢复命令";
+"ui.sessions.delete" = "删除会话";
+"ui.sessions.delete_confirmation" = "删除这个会话？";
+"ui.sessions.delete_confirmation_detail" = "这会移除本地会话文件，且无法撤销。";
+"ui.sessions.unknown_project" = "未知项目";
+
 /* Errors */
 "error.invalid_url" = "无效 URL";
