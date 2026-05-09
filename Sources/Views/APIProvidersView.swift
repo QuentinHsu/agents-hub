@@ -10,19 +10,6 @@ struct APIProvidersView: View {
             apiProviderList
         }
         .navigationTitle(L.string("ui.api_providers.title", using: lm))
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    manager.addAPIProvider()
-                    if let apiProviderID = manager.selectedAPIProviderID {
-                        path.append(.apiProvider(apiProviderID))
-                    }
-                } label: {
-                    Image(systemName: "plus")
-                }
-                .help(L.string("ui.hint.add_api_provider", using: lm))
-            }
-        }
     }
 
     private var apiProviderList: some View {
