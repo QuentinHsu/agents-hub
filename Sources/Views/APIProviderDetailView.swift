@@ -7,6 +7,7 @@ struct APIProviderDetailView: View {
     var apiProviderID: UUID?
     @State private var revealKeyIDs: Set<UUID> = []
     @State private var draftAPIProvider: APIProvider?
+    @State private var keyPendingDelete: PendingAPIProviderKeyDelete?
     @FocusState private var focusedField: APIProviderField?
 
     private var apiProvider: APIProvider? {
@@ -44,6 +45,24 @@ struct APIProviderDetailView: View {
         }
         .onDisappear {
             commitDraftProvider()
+        }
+        .confirmationDialog(
+            L.string("ui.confirm.delete_api_provider_key", using: lm),
+            isPresented: keyDeleteConfirmationBinding
+        ) {
+            Button(L.string("ui.action.delete", using: lm), role: .destructive) {
+                if let keyPendingDelete {
+                    manager.removeKey(keyPendingDelete.keyID, from: keyPendingDelete.providerID)
+                    revealKeyIDs.remove(keyPendingDelete.keyID)
+                    syncDraftProvider()
+                    self.keyPendingDelete = nil
+                }
+            }
+            Button(L.string("ui.action.cancel", using: lm), role: .cancel) {
+                keyPendingDelete = nil
+            }
+        } message: {
+            Text(L.string("ui.confirm.delete_api_provider_key_detail", using: lm))
         }
     }
 
@@ -156,10 +175,10 @@ struct APIProviderDetailView: View {
 
                     Button {
                         commitDraftProvider()
-                        manager.removeKey(key.id, from: apiProvider.id)
-                        syncDraftProvider()
+                        keyPendingDelete = PendingAPIProviderKeyDelete(providerID: apiProvider.id, keyID: key.id)
                     } label: {
                         Image(systemName: "trash")
+                            .foregroundStyle(.red)
                     }
                     .buttonStyle(.borderless)
                     .disabled(apiProvider.keys.count <= 1)
@@ -268,6 +287,16 @@ struct APIProviderDetailView: View {
             revealKeyIDs.insert(keyID)
         }
     }
+
+    private var keyDeleteConfirmationBinding: Binding<Bool> {
+        Binding {
+            keyPendingDelete != nil
+        } set: { isPresented in
+            if !isPresented {
+                keyPendingDelete = nil
+            }
+        }
+    }
 }
 
 private enum APIProviderField: Hashable {
@@ -276,4 +305,9 @@ private enum APIProviderField: Hashable {
     case providerWebsiteURL
     case keyName(UUID)
     case apiKey(UUID)
+}
+
+private struct PendingAPIProviderKeyDelete {
+    let providerID: UUID
+    let keyID: UUID
 }

@@ -52,6 +52,14 @@
 "ui.hint.add_api_provider_key" = "Add a named API key";
 "ui.hint.delete_api_provider_key" = "Delete this API key";
 
+/* Delete confirmations */
+"ui.confirm.delete_configuration" = "Delete this configuration?";
+"ui.confirm.delete_configuration_detail" = "This removes the selected agent configuration and cannot be undone.";
+"ui.confirm.delete_api_provider" = "Delete this API provider?";
+"ui.confirm.delete_api_provider_detail" = "Profiles using this provider will be moved to a fallback provider. This cannot be undone.";
+"ui.confirm.delete_api_provider_key" = "Delete this API key?";
+"ui.confirm.delete_api_provider_key_detail" = "Profiles using this key will be moved to another key on this provider. This cannot be undone.";
+
 /* Dashboard */
 "ui.dashboard.agent_status" = "Agent Status";
 "ui.dashboard.local_versions" = "Local Versions";

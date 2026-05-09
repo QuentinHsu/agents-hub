@@ -52,6 +52,14 @@
 "ui.hint.add_api_provider_key" = "添加具名 API Key";
 "ui.hint.delete_api_provider_key" = "删除这个 API Key";
 
+/* Delete confirmations */
+"ui.confirm.delete_configuration" = "删除这个配置？";
+"ui.confirm.delete_configuration_detail" = "这会移除选中的智能体配置，且无法撤销。";
+"ui.confirm.delete_api_provider" = "删除这个 API 供应商？";
+"ui.confirm.delete_api_provider_detail" = "使用此供应商的配置会改用后备供应商，且无法撤销。";
+"ui.confirm.delete_api_provider_key" = "删除这个 API Key？";
+"ui.confirm.delete_api_provider_key_detail" = "使用此 Key 的配置会改用此供应商下的其他 Key，且无法撤销。";
+
 /* Dashboard */
 "ui.dashboard.agent_status" = "智能体状态";
 "ui.dashboard.local_versions" = "本地版本";

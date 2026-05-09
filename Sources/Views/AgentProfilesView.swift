@@ -7,6 +7,7 @@ struct AgentProfilesView: View {
     let provider: ProviderKind
     @Binding var path: [DetailRoute]
     @State private var sessionManager: SessionManager
+    @State private var profilePendingDelete: APIProfile?
 
     init(manager: ProfileManager, provider: ProviderKind, path: Binding<[DetailRoute]>) {
         self.manager = manager
@@ -27,6 +28,24 @@ struct AgentProfilesView: View {
         .navigationTitle(provider.displayName)
         .task {
             await sessionManager.loadSessions()
+        }
+        .confirmationDialog(
+            L.string("ui.confirm.delete_configuration", using: lm),
+            isPresented: profileDeleteConfirmationBinding
+        ) {
+            Button(L.string("ui.action.delete", using: lm), role: .destructive) {
+                if let profilePendingDelete {
+                    manager.selectProfile(profilePendingDelete)
+                    manager.removeSelectedProfile()
+                    path.removeAll()
+                    self.profilePendingDelete = nil
+                }
+            }
+            Button(L.string("ui.action.cancel", using: lm), role: .cancel) {
+                profilePendingDelete = nil
+            }
+        } message: {
+            Text(L.string("ui.confirm.delete_configuration_detail", using: lm))
         }
     }
 
@@ -60,8 +79,7 @@ struct AgentProfilesView: View {
                     }
 
                     Button(L.string("ui.action.delete", using: lm), role: .destructive) {
-                        manager.selectProfile(profile)
-                        manager.removeSelectedProfile()
+                        profilePendingDelete = profile
                     }
                     .disabled(profiles.count <= 1)
                 }
@@ -174,6 +192,16 @@ struct AgentProfilesView: View {
             manager.skipClaudeCodeOnboarding
         } set: { newValue in
             manager.updateSkipClaudeCodeOnboarding(newValue)
+        }
+    }
+
+    private var profileDeleteConfirmationBinding: Binding<Bool> {
+        Binding {
+            profilePendingDelete != nil
+        } set: { isPresented in
+            if !isPresented {
+                profilePendingDelete = nil
+            }
         }
     }
 

@@ -16,6 +16,8 @@ struct ContentView: View {
     @State private var overviewRefreshTrigger = 0
     @State private var visibleFeedback: AppFeedback?
     @State private var feedbackDismissTask: Task<Void, Never>?
+    @State private var profilePendingDelete: APIProfile?
+    @State private var apiProviderPendingDelete: APIProvider?
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
@@ -109,11 +111,11 @@ struct ContentView: View {
                     }
                     .help(L.string("ui.hint.duplicate_configuration", using: lm))
 
-                    Button {
-                        manager.removeSelectedProfile()
-                        detailPath.removeAll()
+                    Button(role: .destructive) {
+                        profilePendingDelete = manager.selectedProfile
                     } label: {
                         L.label("ui.action.delete", systemImage: "trash", using: lm)
+                            .foregroundStyle(.red)
                     }
                     .disabled(manager.profiles(for: manager.selectedProvider).count <= 1)
                     .help(L.string("ui.hint.delete_configuration", using: lm))
@@ -146,16 +148,52 @@ struct ContentView: View {
                     }
                     .help(L.string("ui.hint.duplicate_api_provider", using: lm))
 
-                    Button {
-                        manager.removeSelectedAPIProvider()
-                        detailPath.removeAll()
+                    Button(role: .destructive) {
+                        apiProviderPendingDelete = manager.selectedAPIProvider()
                     } label: {
                         L.label("ui.action.delete", systemImage: "trash", using: lm)
+                            .foregroundStyle(.red)
                     }
                     .disabled(manager.apiProviders.count <= 1)
                     .help(L.string("ui.hint.delete_api_provider", using: lm))
                 }
             }
+        }
+        .confirmationDialog(
+            L.string("ui.confirm.delete_configuration", using: lm),
+            isPresented: profileDeleteConfirmationBinding
+        ) {
+            Button(L.string("ui.action.delete", using: lm), role: .destructive) {
+                if let profilePendingDelete {
+                    manager.selectProfile(profilePendingDelete)
+                    manager.removeSelectedProfile()
+                    detailPath.removeAll()
+                    self.profilePendingDelete = nil
+                }
+            }
+            Button(L.string("ui.action.cancel", using: lm), role: .cancel) {
+                profilePendingDelete = nil
+            }
+        } message: {
+            Text(L.string("ui.confirm.delete_configuration_detail", using: lm))
+        }
+        .confirmationDialog(
+            L.string("ui.confirm.delete_api_provider", using: lm),
+            isPresented: apiProviderDeleteConfirmationBinding
+        ) {
+            Button(L.string("ui.action.delete", using: lm), role: .destructive) {
+                if let apiProviderPendingDelete {
+                    manager.selectAPIProvider(apiProviderPendingDelete)
+                    manager.removeSelectedAPIProvider()
+                    detailPath.removeAll()
+                    self.apiProviderPendingDelete = nil
+                }
+            }
+            Button(L.string("ui.action.cancel", using: lm), role: .cancel) {
+                apiProviderPendingDelete = nil
+            }
+        } message: {
+            Text(L.string("ui.confirm.delete_api_provider_detail", using: lm))
         }
     }
 
@@ -223,6 +261,26 @@ struct ContentView: View {
 
     private var isSelectedProfileActive: Bool {
         manager.selectedProfile?.isActive == true
+    }
+
+    private var profileDeleteConfirmationBinding: Binding<Bool> {
+        Binding {
+            profilePendingDelete != nil
+        } set: { isPresented in
+            if !isPresented {
+                profilePendingDelete = nil
+            }
+        }
+    }
+
+    private var apiProviderDeleteConfirmationBinding: Binding<Bool> {
+        Binding {
+            apiProviderPendingDelete != nil
+        } set: { isPresented in
+            if !isPresented {
+                apiProviderPendingDelete = nil
+            }
+        }
     }
 
     private func showLatestFeedback() {

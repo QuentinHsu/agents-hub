@@ -4,12 +4,31 @@ struct APIProvidersView: View {
     @Environment(LocalizationManager.self) private var lm
     @Bindable var manager: ProfileManager
     @Binding var path: [DetailRoute]
+    @State private var apiProviderPendingDelete: APIProvider?
 
     var body: some View {
         SettingsPageContent {
             apiProviderList
         }
         .navigationTitle(L.string("ui.api_providers.title", using: lm))
+        .confirmationDialog(
+            L.string("ui.confirm.delete_api_provider", using: lm),
+            isPresented: apiProviderDeleteConfirmationBinding
+        ) {
+            Button(L.string("ui.action.delete", using: lm), role: .destructive) {
+                if let apiProviderPendingDelete {
+                    manager.selectAPIProvider(apiProviderPendingDelete)
+                    manager.removeSelectedAPIProvider()
+                    path.removeAll()
+                    self.apiProviderPendingDelete = nil
+                }
+            }
+            Button(L.string("ui.action.cancel", using: lm), role: .cancel) {
+                apiProviderPendingDelete = nil
+            }
+        } message: {
+            Text(L.string("ui.confirm.delete_api_provider_detail", using: lm))
+        }
     }
 
     private var apiProviderList: some View {
@@ -32,8 +51,7 @@ struct APIProvidersView: View {
                     }
 
                     Button(L.string("ui.action.delete", using: lm), role: .destructive) {
-                        manager.selectAPIProvider(apiProvider)
-                        manager.removeSelectedAPIProvider()
+                        apiProviderPendingDelete = apiProvider
                     }
                     .disabled(manager.apiProviders.count <= 1)
                 }
@@ -96,6 +114,16 @@ struct APIProvidersView: View {
         let keysDisplay = keyNames.isEmpty ? L.string("ui.label.no_key", using: lm) : keyNames
 
         return "\(baseURL) · \(keysDisplay)"
+    }
+
+    private var apiProviderDeleteConfirmationBinding: Binding<Bool> {
+        Binding {
+            apiProviderPendingDelete != nil
+        } set: { isPresented in
+            if !isPresented {
+                apiProviderPendingDelete = nil
+            }
+        }
     }
 
     private func openProviderWebsite(_ apiProvider: APIProvider) {
