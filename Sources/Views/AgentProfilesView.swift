@@ -59,7 +59,7 @@ struct AgentProfilesView: View {
                 }
             }
         }
-        .settingsCard()
+        .settingsCard(L.string("ui.agent_profiles.configurations", using: lm))
     }
 
     private var claudeSharedSettings: some View {

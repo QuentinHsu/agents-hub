@@ -79,6 +79,7 @@
 "ui.api_provider.key_api_key_detail" = "保存在此供应商中，并被智能体配置复用";
 
 /* Profile detail */
+"ui.profile.configuration" = "配置";
 "ui.profile.no_profile" = "无配置";
 "ui.profile.profile_name" = "配置名称";
 "ui.profile.profile_name_detail" = "仅在 Agents Hub 中使用";

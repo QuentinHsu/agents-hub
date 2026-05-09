@@ -103,7 +103,7 @@ struct ProfileDetailView: View {
                 claudeModelFields()
             }
         }
-        .settingsCard()
+        .settingsCard(L.string("ui.profile.configuration", using: lm))
     }
 
     private func apiProviderKeyPicker(for profile: APIProfile, apiProvider: APIProvider) -> some View {

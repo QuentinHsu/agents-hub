@@ -79,6 +79,7 @@
 "ui.api_provider.key_api_key_detail" = "Stored on this provider and reused by agent configurations";
 
 /* Profile detail */
+"ui.profile.configuration" = "Configuration";
 "ui.profile.no_profile" = "No Profile";
 "ui.profile.profile_name" = "Profile Name";
 "ui.profile.profile_name_detail" = "Only used inside Agents Hub";
