@@ -13,6 +13,9 @@ enum AppInfo {
     }
 
     static var versionDisplay: String {
+        #if DEBUG
+        return "dev"
+        #else
         let info = Bundle.main.infoDictionary ?? [:]
         let version = info["CFBundleShortVersionString"] as? String
         let build = info["CFBundleVersion"] as? String
@@ -27,6 +30,7 @@ enum AppInfo {
         default:
             return "dev"
         }
+        #endif
     }
 }
 

@@ -21,7 +21,8 @@ struct AgentsHubApp: App {
                 Button("\(L.string("ui.settings.about", using: localizationManager)) \(AppInfo.displayName)") {
                     NSApplication.shared.orderFrontStandardAboutPanel(options: [
                         .applicationName: AppInfo.displayName,
-                        .applicationVersion: AppInfo.versionDisplay
+                        .applicationVersion: AppInfo.versionDisplay,
+                        .version: ""
                     ])
                 }
             }

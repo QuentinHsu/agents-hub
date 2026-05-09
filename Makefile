@@ -6,6 +6,8 @@ RELEASE_DIR  := $(BUILD_DIR)/release
 APP_BUNDLE   := $(BUILD_DIR)/$(DISPLAY_NAME).app
 DMG_FILE     := $(BUILD_DIR)/$(DISPLAY_NAME).dmg
 INSTALL_DIR  := /Applications
+LOCAL_APP_VERSION ?= dev
+LOCAL_BUILD_NUMBER ?= $(LOCAL_APP_VERSION)
 WORKFLOW_REPO ?= https://github.com/QuentinHsu/workflow.git
 WORKFLOW_REF  ?= main
 WORKFLOW_CACHE_DIR := $(BUILD_DIR)/workflow
@@ -56,6 +58,8 @@ app: prepare-release-kit
 	 APP_MIN_MACOS="15.0" \
 	 APP_ICON_PATH="Assets/AppIcon.icns" \
 	 APP_REPOSITORY="QuentinHsu/agents-hub" \
+	 APP_VERSION="$(LOCAL_APP_VERSION)" \
+	 BUILD_NUMBER="$(LOCAL_BUILD_NUMBER)" \
 	 "$(RELEASE_KIT_BUILD)" app
 
 # ─── DMG ──────────────────────────────────────────────────────
@@ -69,6 +73,8 @@ dmg: prepare-release-kit
 	 APP_MIN_MACOS="15.0" \
 	 APP_ICON_PATH="Assets/AppIcon.icns" \
 	 APP_REPOSITORY="QuentinHsu/agents-hub" \
+	 APP_VERSION="$(LOCAL_APP_VERSION)" \
+	 BUILD_NUMBER="$(LOCAL_BUILD_NUMBER)" \
 	 "$(RELEASE_KIT_BUILD)" dmg
 
 # ─── Install / Uninstall ─────────────────────────────────────
