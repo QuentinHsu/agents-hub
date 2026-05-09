@@ -1,3 +1,23 @@
+## v0.0.5
+
+> 本次更新让你可以按项目更清晰地查看和管理本地 CLI 会话、快速复制恢复命令，并在更明确的设置信息与删除确认提示下更安心地操作。
+
+### 新增功能
+
+- **sessions**：add CLI session management
+- **ui**：add confirmation for delete actions
+
+### 优化改进
+
+- **ui**：add titles to configuration cards
+- **settings**：adjust settings card title layout
+- extract shared binding and path formatting helpers
+
+### 问题修复
+
+- **core**：harden session timestamps and home paths
+- **sessions**：persist Codex session deletion
+
 ## v0.0.4
 
 > 本次更新让关于页和配置界面更清爽一致、服务商新增入口不再重复，同时本地构建的版本信息显示也更加准确。
