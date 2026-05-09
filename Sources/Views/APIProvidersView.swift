@@ -13,7 +13,7 @@ struct APIProvidersView: View {
         .navigationTitle(L.string("ui.api_providers.title", using: lm))
         .confirmationDialog(
             L.string("ui.confirm.delete_api_provider", using: lm),
-            isPresented: apiProviderDeleteConfirmationBinding
+            isPresented: deleteConfirmationBinding(for: $apiProviderPendingDelete)
         ) {
             Button(L.string("ui.action.delete", using: lm), role: .destructive) {
                 if let apiProviderPendingDelete {
@@ -114,16 +114,6 @@ struct APIProvidersView: View {
         let keysDisplay = keyNames.isEmpty ? L.string("ui.label.no_key", using: lm) : keyNames
 
         return "\(baseURL) · \(keysDisplay)"
-    }
-
-    private var apiProviderDeleteConfirmationBinding: Binding<Bool> {
-        Binding {
-            apiProviderPendingDelete != nil
-        } set: { isPresented in
-            if !isPresented {
-                apiProviderPendingDelete = nil
-            }
-        }
     }
 
     private func openProviderWebsite(_ apiProvider: APIProvider) {

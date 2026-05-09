@@ -18,7 +18,7 @@ struct CLISession: Identifiable, Hashable {
 
     var displayProjectPath: String {
         if projectPath.hasPrefix("/") {
-            return abbreviateHome(projectPath)
+            return projectPath.abbreviatingHome
         }
         return projectPath
     }
@@ -28,13 +28,5 @@ struct CLISession: Identifiable, Hashable {
             return nil
         }
         return ByteCountFormatter.string(fromByteCount: Int64(size), countStyle: .file)
-    }
-
-    private func abbreviateHome(_ path: String) -> String {
-        let home = FileManager.default.homeDirectoryForCurrentUser.path()
-        if path.hasPrefix(home) {
-            return "~" + path.dropFirst(home.count)
-        }
-        return path
     }
 }

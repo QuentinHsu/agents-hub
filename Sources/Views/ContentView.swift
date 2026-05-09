@@ -161,7 +161,7 @@ struct ContentView: View {
         }
         .confirmationDialog(
             L.string("ui.confirm.delete_configuration", using: lm),
-            isPresented: profileDeleteConfirmationBinding
+            isPresented: deleteConfirmationBinding(for: $profilePendingDelete)
         ) {
             Button(L.string("ui.action.delete", using: lm), role: .destructive) {
                 if let profilePendingDelete {
@@ -179,7 +179,7 @@ struct ContentView: View {
         }
         .confirmationDialog(
             L.string("ui.confirm.delete_api_provider", using: lm),
-            isPresented: apiProviderDeleteConfirmationBinding
+            isPresented: deleteConfirmationBinding(for: $apiProviderPendingDelete)
         ) {
             Button(L.string("ui.action.delete", using: lm), role: .destructive) {
                 if let apiProviderPendingDelete {
@@ -261,26 +261,6 @@ struct ContentView: View {
 
     private var isSelectedProfileActive: Bool {
         manager.selectedProfile?.isActive == true
-    }
-
-    private var profileDeleteConfirmationBinding: Binding<Bool> {
-        Binding {
-            profilePendingDelete != nil
-        } set: { isPresented in
-            if !isPresented {
-                profilePendingDelete = nil
-            }
-        }
-    }
-
-    private var apiProviderDeleteConfirmationBinding: Binding<Bool> {
-        Binding {
-            apiProviderPendingDelete != nil
-        } set: { isPresented in
-            if !isPresented {
-                apiProviderPendingDelete = nil
-            }
-        }
     }
 
     private func showLatestFeedback() {

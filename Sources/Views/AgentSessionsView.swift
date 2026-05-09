@@ -70,7 +70,7 @@ struct AgentSessionsView: View {
                 displayPath = nil
             } else {
                 displayName = projectName(for: key)
-                displayPath = abbreviateHome(key)
+                displayPath = key.abbreviatingHome
             }
             return ProjectGroup(
                 id: key.isEmpty ? "__unknown__" : key,
@@ -113,14 +113,6 @@ struct AgentSessionsView: View {
     }
 
     // MARK: - Helpers
-
-    private func abbreviateHome(_ path: String) -> String {
-        let home = FileManager.default.homeDirectoryForCurrentUser.path()
-        if path.hasPrefix(home) {
-            return "~" + path.dropFirst(home.count)
-        }
-        return path
-    }
 
     private func projectName(for path: String) -> String {
         path.components(separatedBy: "/").last { !$0.isEmpty } ?? path
@@ -248,7 +240,7 @@ private struct ProjectGroupSection: View {
         }
         .confirmationDialog(
             L.string("ui.sessions.delete_confirmation", using: lm),
-            isPresented: deleteConfirmationBinding
+            isPresented: deleteConfirmationBinding(for: $sessionPendingDelete)
         ) {
             Button(L.string("ui.sessions.delete", using: lm), role: .destructive) {
                 if let sessionPendingDelete {
@@ -261,16 +253,6 @@ private struct ProjectGroupSection: View {
             }
         } message: {
             Text(L.string("ui.sessions.delete_confirmation_detail", using: lm))
-        }
-    }
-
-    private var deleteConfirmationBinding: Binding<Bool> {
-        Binding {
-            sessionPendingDelete != nil
-        } set: { isPresented in
-            if !isPresented {
-                sessionPendingDelete = nil
-            }
         }
     }
 

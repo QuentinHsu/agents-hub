@@ -1,5 +1,15 @@
 import SwiftUI
 
+func deleteConfirmationBinding<T>(for item: Binding<T?>) -> Binding<Bool> {
+    Binding {
+        item.wrappedValue != nil
+    } set: { isPresented in
+        if !isPresented {
+            item.wrappedValue = nil
+        }
+    }
+}
+
 struct DraftBinding<Draft, Value>: @unchecked Sendable {
     let draft: Binding<Draft?>
     let getValue: @Sendable (Draft?) -> Value

@@ -31,7 +31,7 @@ struct AgentProfilesView: View {
         }
         .confirmationDialog(
             L.string("ui.confirm.delete_configuration", using: lm),
-            isPresented: profileDeleteConfirmationBinding
+            isPresented: deleteConfirmationBinding(for: $profilePendingDelete)
         ) {
             Button(L.string("ui.action.delete", using: lm), role: .destructive) {
                 if let profilePendingDelete {
@@ -192,16 +192,6 @@ struct AgentProfilesView: View {
             manager.skipClaudeCodeOnboarding
         } set: { newValue in
             manager.updateSkipClaudeCodeOnboarding(newValue)
-        }
-    }
-
-    private var profileDeleteConfirmationBinding: Binding<Bool> {
-        Binding {
-            profilePendingDelete != nil
-        } set: { isPresented in
-            if !isPresented {
-                profilePendingDelete = nil
-            }
         }
     }
 

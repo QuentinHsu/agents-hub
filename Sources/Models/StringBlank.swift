@@ -15,4 +15,12 @@ extension String {
         guard trimmed.count > 8 else { return String(repeating: "•", count: trimmed.count) }
         return "\(trimmed.prefix(4))••••\(trimmed.suffix(4))"
     }
+
+    var abbreviatingHome: String {
+        let home = FileManager.default.homeDirectoryForCurrentUser.path()
+        if hasPrefix(home) {
+            return "~" + dropFirst(home.count)
+        }
+        return self
+    }
 }

@@ -1,7 +1,28 @@
 import Foundation
 
 enum SessionScanner {
-    static func scanSessions(for provider: ProviderKind) async -> [CLISession] {
+    // MARK: - Message Type Constants
+
+    private static let typeCustomTitle = "custom-title"
+    private static let typeUser = "user"
+    private static let typeHuman = "human"
+    private static let typeAssistant = "assistant"
+
+    // MARK: - Date Formatters
+
+    nonisolated(unsafe) private static let isoFormatterWithFractional: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+
+    nonisolated(unsafe) private static let isoFormatterWithoutFractional: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime]
+        return f
+    }()
+
+    nonisolated static func scanSessions(for provider: ProviderKind) async -> [CLISession] {
         switch provider {
         case .claudeCode:
             await scanClaudeCodeSessions()
@@ -55,17 +76,18 @@ enum SessionScanner {
         let fm = FileManager.default
         let sessionId = file.deletingPathExtension().lastPathComponent
 
-        guard let handle = try? FileHandle(forReadingFrom: file) else { return nil }
-        defer { try? handle.close() }
+        guard let data = try? Data(contentsOf: file, options: .mappedIfSafe),
+              let content = String(data: data, encoding: .utf8) else { return nil }
 
-        // Head: first 10 lines
-        let headLines = readLines(from: handle, maxCount: 10)
-        // Tail: last 30 lines
-        let tailLines = readTailLines(from: file, maxCount: 30)
+        let allLines = content.components(separatedBy: "\n")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
 
-        guard !headLines.isEmpty else { return nil }
+        guard !allLines.isEmpty else { return nil }
 
-        // Parse head for: sessionId, cwd, createdAt, first user message title, gitBranch
+        let headLines = Array(allLines.prefix(10))
+        let tailLines = Array(allLines.suffix(30))
+
         var resolvedSessionId = sessionId
         var projectPath = ""
         var createdAt: Date?
@@ -89,31 +111,23 @@ enum SessionScanner {
             if let branch = obj["gitBranch"] as? String, !branch.isEmpty {
                 gitBranch = branch
             }
-            if customTitle == nil, type == "custom-title" {
+            if customTitle == nil, type == typeCustomTitle {
                 customTitle = (obj["customTitle"] as? String)?.nilIfBlank
             }
 
-            // First user message as title candidate (skip system/meta content)
             if titleCandidate == nil {
                 titleCandidate = extractUserMessageTitle(from: obj)
             }
         }
 
-        // Parse tail for: lastActiveAt, custom-title, summary
         var lastActiveAt: Date?
         var latestMessageSummary: String?
-        var messageCount = 0
-
-        // Count messages from head
-        for line in headLines {
+        let messageCount = allLines.count { line in
             guard let obj = parseJSON(line),
-                  let type = obj["type"] as? String else { continue }
-            if isConversationMessage(type) {
-                messageCount += 1
-            }
+                  let type = obj["type"] as? String else { return false }
+            return isConversationMessage(type)
         }
 
-        // Parse tail in reverse for latest state
         for line in tailLines.reversed() {
             guard let obj = parseJSON(line),
                   let type = obj["type"] as? String else { continue }
@@ -122,35 +136,19 @@ enum SessionScanner {
                 lastActiveAt = parseTimestamp(ts)
             }
 
-            if customTitle == nil, type == "custom-title" {
+            if customTitle == nil, type == typeCustomTitle {
                 customTitle = (obj["customTitle"] as? String)?.nilIfBlank
             }
 
-            if latestMessageSummary == nil {
-                if let content = obj["message"] as? [String: Any],
-                   let msgContent = content["content"] {
-                    let text = extractText(from: msgContent)
-                    if let text, !text.isEmpty {
-                        // Skip meta-only content
-                        let isMeta = obj["isMeta"] as? Bool ?? false
-                        if !isMeta {
-                            latestMessageSummary = text
-                        }
-                    }
+            if latestMessageSummary == nil,
+               let content = obj["message"] as? [String: Any],
+               let msgContent = content["content"] {
+                let text = extractText(from: msgContent)
+                if let text, !text.isEmpty, !(obj["isMeta"] as? Bool ?? false) {
+                    latestMessageSummary = text
                 }
             }
-
-            if isConversationMessage(type) {
-                messageCount += 1
-            }
         }
-
-        // Avoid double-counting: head and tail may overlap
-        // Recount from a combined approach: count in tail that aren't in head range
-        // Simple approach: just use head count + unique tail count
-        // Actually, let's just do a rough count — head messages already counted,
-        // tail adds messages beyond the head window
-        // We'll accept slight inaccuracy for performance
 
         let modificationDate = (try? fm.attributesOfItem(atPath: file.path())[.modificationDate] as? Date)
 
@@ -183,28 +181,22 @@ enum SessionScanner {
         let fm = FileManager.default
         let codexDir = AppPaths.codexDirectory
 
-        // 1. Read session_index.jsonl for metadata (id, thread_name, updated_at)
         var indexEntries: [String: (name: String, updatedAt: Date?)] = [:]
         let indexFile = codexDir.appendingPathComponent("session_index.jsonl")
         if let data = try? Data(contentsOf: indexFile, options: .mappedIfSafe),
            let content = String(data: data, encoding: .utf8) {
-            let iso = ISO8601DateFormatter()
-            iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
             for line in content.components(separatedBy: "\n") {
                 guard let obj = parseJSON(line),
                       let id = obj["id"] as? String else { continue }
                 let name = obj["thread_name"] as? String
-                let updatedAt = (obj["updated_at"] as? String).flatMap { iso.date(from: $0) }
+                let updatedAt = (obj["updated_at"] as? String).flatMap { isoFormatterWithFractional.date(from: $0) }
                 indexEntries[id] = (name: name ?? "", updatedAt: updatedAt)
             }
         }
 
-        // 2. Recursively scan sessions/ directory for rollout JSONL files
         let sessionsDir = AppPaths.codexSessionsDirectory
         var rolloutFiles: [URL] = []
         collectJSONLFiles(in: sessionsDir, result: &rolloutFiles)
-
-        // 3. Parse each rollout file and merge with index metadata
         var sessions: [CLISession] = []
 
         for file in rolloutFiles {
@@ -306,19 +298,6 @@ enum SessionScanner {
         return lines
     }
 
-    private static func readTailLines(from file: URL, maxCount: Int) -> [String] {
-        guard let data = try? Data(contentsOf: file, options: .mappedIfSafe),
-              let content = String(data: data, encoding: .utf8) else {
-            return []
-        }
-
-        let allLines = content.components(separatedBy: "\n")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-
-        return Array(allLines.suffix(maxCount))
-    }
-
     // MARK: - JSON & Timestamp Helpers
 
     private static func parseJSON(_ line: String) -> [String: Any]? {
@@ -328,11 +307,8 @@ enum SessionScanner {
 
     private static func parseTimestamp(_ value: Any) -> Date? {
         if let str = value as? String {
-            let iso = ISO8601DateFormatter()
-            iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-            if let date = iso.date(from: str) { return date }
-            iso.formatOptions = [.withInternetDateTime]
-            return iso.date(from: str)
+            return isoFormatterWithFractional.date(from: str)
+                ?? isoFormatterWithoutFractional.date(from: str)
         }
 
         if let num = value as? Double {
@@ -355,14 +331,14 @@ enum SessionScanner {
     }
 
     private static func isConversationMessage(_ type: String) -> Bool {
-        type == "user" || type == "human" || type == "assistant"
+        type == typeUser || type == typeHuman || type == typeAssistant
     }
 
     private static func extractUserMessageTitle(from obj: [String: Any]) -> String? {
         let type = obj["type"] as? String
         let role = (obj["message"] as? [String: Any])?["role"] as? String
 
-        guard type == "user" || type == "human" || role == "user" else { return nil }
+        guard type == typeUser || type == typeHuman || role == typeUser else { return nil }
 
         // Extract text content
         var textSource: Any?

@@ -48,7 +48,7 @@ struct APIProviderDetailView: View {
         }
         .confirmationDialog(
             L.string("ui.confirm.delete_api_provider_key", using: lm),
-            isPresented: keyDeleteConfirmationBinding
+            isPresented: deleteConfirmationBinding(for: $keyPendingDelete)
         ) {
             Button(L.string("ui.action.delete", using: lm), role: .destructive) {
                 if let keyPendingDelete {
@@ -288,15 +288,6 @@ struct APIProviderDetailView: View {
         }
     }
 
-    private var keyDeleteConfirmationBinding: Binding<Bool> {
-        Binding {
-            keyPendingDelete != nil
-        } set: { isPresented in
-            if !isPresented {
-                keyPendingDelete = nil
-            }
-        }
-    }
 }
 
 private enum APIProviderField: Hashable {
