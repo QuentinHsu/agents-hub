@@ -31,6 +31,17 @@ struct APIProvider: Identifiable, Hashable, Codable, Sendable {
     var isReady: Bool {
         baseURL.nilIfBlank != nil && keys.contains { $0.isReady }
     }
+
+    var websiteURL: URL? {
+        guard let trimmed = providerWebsiteURL.nilIfBlank else { return nil }
+        let candidate = trimmed.contains("://") ? trimmed : "https://\(trimmed)"
+        guard let url = URL(string: candidate),
+              let scheme = url.scheme?.lowercased(),
+              ["http", "https"].contains(scheme),
+              url.host?.isEmpty == false
+        else { return nil }
+        return url
+    }
 }
 
 struct APIProviderKey: Identifiable, Hashable, Codable, Sendable {

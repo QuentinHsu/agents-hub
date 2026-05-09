@@ -18,9 +18,14 @@ struct AgentProfilesView: View {
         .navigationTitle(provider.displayName)
     }
 
+    private var sortedProfiles: [APIProfile] {
+        manager.profiles(for: provider)
+    }
+
     private var profilesList: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ForEach(manager.profiles(for: provider)) { profile in
+        let profiles = sortedProfiles
+        return VStack(alignment: .leading, spacing: 0) {
+            ForEach(profiles) { profile in
                 Button {
                     manager.selectProfile(profile)
                     path.append(.profile(profile.id))
@@ -46,10 +51,10 @@ struct AgentProfilesView: View {
                         manager.selectProfile(profile)
                         manager.removeSelectedProfile()
                     }
-                    .disabled(manager.profiles(for: provider).count <= 1)
+                    .disabled(profiles.count <= 1)
                 }
 
-                if profile.id != manager.profiles(for: provider).last?.id {
+                if profile.id != profiles.last?.id {
                     SettingsDivider()
                 }
             }

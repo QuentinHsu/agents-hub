@@ -1,4 +1,34 @@
+import AppKit
 import Foundation
+
+// MARK: - App Info
+
+enum AppInfo {
+    static let displayName = "Agents Hub"
+    static let sourceRepository = URL(string: "https://github.com/QuentinHsu/agents-hub")!
+
+    @MainActor
+    static var appIcon: NSImage {
+        NSApplication.shared.applicationIconImage
+    }
+
+    static var versionDisplay: String {
+        let info = Bundle.main.infoDictionary ?? [:]
+        let version = info["CFBundleShortVersionString"] as? String
+        let build = info["CFBundleVersion"] as? String
+
+        switch (version?.nilIfEmpty, build?.nilIfEmpty) {
+        case let (.some(version), .some(build)) where build != version:
+            return "\(version) (\(build))"
+        case let (.some(version), _):
+            return version
+        case let (_, .some(build)):
+            return build
+        default:
+            return "dev"
+        }
+    }
+}
 
 // MARK: - Claude Models
 

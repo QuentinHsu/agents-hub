@@ -105,7 +105,7 @@ struct APIProviderDetailView: View {
                         Image(systemName: "safari")
                     }
                     .buttonStyle(.borderless)
-                    .disabled(providerWebsiteURL(for: apiProvider) == nil)
+                    .disabled(apiProvider.websiteURL == nil)
                     .help(L.string("ui.hint.open_provider_website", using: lm))
                 }
                 .frame(width: FormConstants.fieldWidth, alignment: .leading)
@@ -226,23 +226,10 @@ struct APIProviderDetailView: View {
 
     private func openProviderWebsite() {
         guard let apiProvider,
-              let url = providerWebsiteURL(for: apiProvider)
+              let url = apiProvider.websiteURL
         else { return }
 
         NSWorkspace.shared.open(url)
-    }
-
-    private func providerWebsiteURL(for apiProvider: APIProvider) -> URL? {
-        guard let trimmed = apiProvider.providerWebsiteURL.nilIfBlank else { return nil }
-
-        let candidate = trimmed.contains("://") ? trimmed : "https://\(trimmed)"
-        guard let url = URL(string: candidate),
-              let scheme = url.scheme?.lowercased(),
-              ["http", "https"].contains(scheme),
-              url.host?.isEmpty == false
-        else { return nil }
-
-        return url
     }
 
     private func selectRoutedProvider() {

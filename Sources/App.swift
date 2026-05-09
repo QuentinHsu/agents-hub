@@ -18,10 +18,10 @@ struct AgentsHubApp: App {
         .defaultSize(width: 820, height: 540)
         .commands {
             CommandGroup(replacing: .appInfo) {
-                Button("\(L.string("ui.settings.about", using: localizationManager)) \(AppMetadata.displayName)") {
+                Button("\(L.string("ui.settings.about", using: localizationManager)) \(AppInfo.displayName)") {
                     NSApplication.shared.orderFrontStandardAboutPanel(options: [
-                        .applicationName: AppMetadata.displayName,
-                        .applicationVersion: AppMetadata.versionDisplay
+                        .applicationName: AppInfo.displayName,
+                        .applicationVersion: AppInfo.versionDisplay
                     ])
                 }
             }
@@ -32,33 +32,6 @@ struct AgentsHubApp: App {
                 }
             }
         }
-    }
-}
-
-private enum AppMetadata {
-    static let displayName = "Agents Hub"
-
-    static var versionDisplay: String {
-        let info = Bundle.main.infoDictionary ?? [:]
-        let version = info["CFBundleShortVersionString"] as? String
-        let build = info["CFBundleVersion"] as? String
-
-        switch (version?.nilIfEmpty, build?.nilIfEmpty) {
-        case let (.some(version), .some(build)) where build != version:
-            return "\(version) (\(build))"
-        case let (.some(version), _):
-            return version
-        case let (_, .some(build)):
-            return build
-        default:
-            return "0.1.0"
-        }
-    }
-}
-
-private extension String {
-    var nilIfEmpty: String? {
-        isEmpty ? nil : self
     }
 }
 
@@ -73,6 +46,6 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @MainActor
     private func updateApplicationMenuTitle() {
-        NSApplication.shared.mainMenu?.items.first?.title = AppMetadata.displayName
+        NSApplication.shared.mainMenu?.items.first?.title = AppInfo.displayName
     }
 }

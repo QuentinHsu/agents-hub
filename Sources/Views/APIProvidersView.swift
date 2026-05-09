@@ -13,8 +13,9 @@ struct APIProvidersView: View {
     }
 
     private var apiProviderList: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ForEach(manager.sortedAPIProviders()) { apiProvider in
+        let providers = manager.sortedAPIProviders()
+        return VStack(alignment: .leading, spacing: 0) {
+            ForEach(providers) { apiProvider in
                 Button {
                     manager.selectAPIProvider(apiProvider)
                     path.append(.apiProvider(apiProvider.id))
@@ -37,7 +38,7 @@ struct APIProvidersView: View {
                     .disabled(manager.apiProviders.count <= 1)
                 }
 
-                if apiProvider.id != manager.sortedAPIProviders().last?.id {
+                if apiProvider.id != providers.last?.id {
                     SettingsDivider()
                 }
             }
@@ -79,7 +80,7 @@ struct APIProvidersView: View {
                     Image(systemName: "safari")
                 }
                 .buttonStyle(.borderless)
-                .disabled(providerWebsiteURL(for: apiProvider) == nil)
+                .disabled(apiProvider.websiteURL == nil)
                 .help(L.string("ui.hint.open_provider_website", using: lm))
 
                 Image(systemName: "chevron.right")
@@ -98,20 +99,7 @@ struct APIProvidersView: View {
     }
 
     private func openProviderWebsite(_ apiProvider: APIProvider) {
-        guard let url = providerWebsiteURL(for: apiProvider) else { return }
+        guard let url = apiProvider.websiteURL else { return }
         NSWorkspace.shared.open(url)
-    }
-
-    private func providerWebsiteURL(for apiProvider: APIProvider) -> URL? {
-        guard let trimmed = apiProvider.providerWebsiteURL.nilIfBlank else { return nil }
-
-        let candidate = trimmed.contains("://") ? trimmed : "https://\(trimmed)"
-        guard let url = URL(string: candidate),
-              let scheme = url.scheme?.lowercased(),
-              ["http", "https"].contains(scheme),
-              url.host?.isEmpty == false
-        else { return nil }
-
-        return url
     }
 }
