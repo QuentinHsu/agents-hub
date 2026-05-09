@@ -142,6 +142,8 @@ struct ProfileDetailView: View {
             }
             .labelsHidden()
             .pickerStyle(.segmented)
+            .controlSize(.small)
+            .frame(width: FormConstants.compactPickerWidth, alignment: .leading)
             .frame(width: FormConstants.fieldWidth, alignment: .leading)
         }
     }

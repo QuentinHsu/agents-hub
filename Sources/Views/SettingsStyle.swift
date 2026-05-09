@@ -6,6 +6,7 @@ import SwiftUI
 enum FormConstants {
     static let fieldWidth: CGFloat = 330
     static let apiKeyFieldWidth: CGFloat = 286
+    static let compactPickerWidth: CGFloat = 210
 }
 
 // MARK: - Settings Components
