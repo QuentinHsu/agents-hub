@@ -18,8 +18,13 @@ extension String {
 
     var abbreviatingHome: String {
         let home = FileManager.default.homeDirectoryForCurrentUser.path()
-        if hasPrefix(home) {
-            return "~" + dropFirst(home.count)
+        if self == home {
+            return "~"
+        }
+
+        let homePrefix = home.hasSuffix("/") ? home : home + "/"
+        if hasPrefix(homePrefix) {
+            return "~/" + String(dropFirst(homePrefix.count))
         }
         return self
     }

@@ -8,20 +8,6 @@ enum SessionScanner {
     private static let typeHuman = "human"
     private static let typeAssistant = "assistant"
 
-    // MARK: - Date Formatters
-
-    nonisolated(unsafe) private static let isoFormatterWithFractional: ISO8601DateFormatter = {
-        let f = ISO8601DateFormatter()
-        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return f
-    }()
-
-    nonisolated(unsafe) private static let isoFormatterWithoutFractional: ISO8601DateFormatter = {
-        let f = ISO8601DateFormatter()
-        f.formatOptions = [.withInternetDateTime]
-        return f
-    }()
-
     nonisolated static func scanSessions(for provider: ProviderKind) async -> [CLISession] {
         switch provider {
         case .claudeCode:
@@ -189,7 +175,7 @@ enum SessionScanner {
                 guard let obj = parseJSON(line),
                       let id = obj["id"] as? String else { continue }
                 let name = obj["thread_name"] as? String
-                let updatedAt = (obj["updated_at"] as? String).flatMap { isoFormatterWithFractional.date(from: $0) }
+                let updatedAt = (obj["updated_at"] as? String).flatMap { parseTimestamp($0) }
                 indexEntries[id] = (name: name ?? "", updatedAt: updatedAt)
             }
         }
@@ -307,8 +293,15 @@ enum SessionScanner {
 
     private static func parseTimestamp(_ value: Any) -> Date? {
         if let str = value as? String {
-            return isoFormatterWithFractional.date(from: str)
-                ?? isoFormatterWithoutFractional.date(from: str)
+            let formatterWithFractional = ISO8601DateFormatter()
+            formatterWithFractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            if let date = formatterWithFractional.date(from: str) {
+                return date
+            }
+
+            let formatterWithoutFractional = ISO8601DateFormatter()
+            formatterWithoutFractional.formatOptions = [.withInternetDateTime]
+            return formatterWithoutFractional.date(from: str)
         }
 
         if let num = value as? Double {
