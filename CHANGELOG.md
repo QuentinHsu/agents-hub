@@ -1,3 +1,19 @@
+## v0.0.4
+
+> 本次更新让关于页和配置界面更清爽一致、服务商新增入口不再重复，同时本地构建的版本信息显示也更加准确。
+
+### 优化改进
+
+- **about**：refine about page control sizing
+- **profile**：refine Codex provider name picker sizing
+- **settings**：reuse app info and website URL parsing
+
+### 问题修复
+
+- **build**：fetch release kit from remote workflow
+- **providers**：remove duplicate add provider button
+- **version**：correct local build version display
+
 ## v0.0.3
 
 > 本次更新让列表与设置页的展示更简洁统一，减少重复标题带来的干扰，浏览和调整内容时更清爽顺手。
