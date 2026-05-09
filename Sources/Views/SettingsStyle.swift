@@ -171,10 +171,12 @@ private struct SettingsCardModifier: ViewModifier {
     func body(content: Content) -> some View {
         VStack(alignment: .leading, spacing: 7) {
             if let title {
-                VStack(alignment: .leading, spacing: 2) {
+                HStack {
                     Text(title)
                         .font(.subheadline.weight(.bold))
                         .foregroundStyle(.primary)
+
+                    Spacer()
 
                     if let subtitle {
                         Text(subtitle)
