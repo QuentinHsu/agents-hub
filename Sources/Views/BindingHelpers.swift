@@ -1,11 +1,19 @@
 import SwiftUI
 
 func deleteConfirmationBinding<T>(for item: Binding<T?>) -> Binding<Bool> {
-    Binding {
+    DeleteConfirmationBinding(item: item).binding()
+}
+
+private struct DeleteConfirmationBinding<T>: @unchecked Sendable {
+    let item: Binding<T?>
+
+    func binding() -> Binding<Bool> {
+        Binding {
         item.wrappedValue != nil
-    } set: { isPresented in
-        if !isPresented {
-            item.wrappedValue = nil
+        } set: { isPresented in
+            if !isPresented {
+                item.wrappedValue = nil
+            }
         }
     }
 }

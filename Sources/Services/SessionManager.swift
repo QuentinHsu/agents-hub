@@ -39,6 +39,7 @@ final class SessionManager {
             if isRolloutFile {
                 try? fm.removeItem(at: session.filePath)
             }
+            removeCodexIndexEntry(for: session.id)
         }
 
         sessions.removeAll { $0.id == session.id }
@@ -95,5 +96,29 @@ final class SessionManager {
             return "'\(escaped)'"
         }
         return path
+    }
+
+    private func removeCodexIndexEntry(for sessionId: String) {
+        let indexFile = AppPaths.codexDirectory.appendingPathComponent("session_index.jsonl")
+        guard let data = try? Data(contentsOf: indexFile),
+              let content = String(data: data, encoding: .utf8) else { return }
+
+        let hadTrailingNewline = content.hasSuffix("\n")
+        let keptLines = content.components(separatedBy: "\n").filter { line in
+            guard !line.isEmpty else { return false }
+            guard let data = line.data(using: .utf8),
+                  let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let id = obj["id"] as? String else {
+                return true
+            }
+            return id != sessionId
+        }
+
+        var updatedContent = keptLines.joined(separator: "\n")
+        if !updatedContent.isEmpty, hadTrailingNewline {
+            updatedContent += "\n"
+        }
+
+        try? updatedContent.write(to: indexFile, atomically: true, encoding: .utf8)
     }
 }
